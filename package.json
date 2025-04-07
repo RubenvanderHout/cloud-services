@@ -1,0 +1,11 @@
+{
+  "name": "cloud-services",
+  "version": "1.0.0",
+  "description": "Microservices project for school",
+  "main": "gateway.js",
+  "scripts": {
+    "start": "npm run gateway.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
