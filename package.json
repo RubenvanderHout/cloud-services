@@ -7,5 +7,11 @@
     "start": "npm run gateway.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "node-fetch": "^3.3.2",
+    "opossum": "^8.4.0"
+  }
 }
