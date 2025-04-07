@@ -45,19 +45,19 @@ function createServiceMiddleware(serviceUrl) {
             body: req.body,
         };
 
-        breaker
-            .fire(req.params[0], config)
-            .then((data) => res.json(data))
-            .catch((error) => {
-                if (breaker.opened) {
-                    res.status(503).json({
-                        error: "Service Unavailable",
-                        service: serviceUrl,
-                    });
-                } else {
-                    next(error);
-                }
-            });
+        try {
+            const data = await breaker.fire(req.params[0], config)
+            res.json(data);
+        } catch (error) {
+            if (breaker.opened) {
+                return res.status(503).json({
+                    error: "Service Unavailable",
+                    service: serviceUrl,
+                });
+            } else {
+                next(error);
+            }
+        }
     }
 
     return callback;
