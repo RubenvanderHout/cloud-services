@@ -10,7 +10,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/amqplib": "^0.10.7",
+    "@types/node": "^22.14.0",
     "amqplib": "^0.10.7",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
