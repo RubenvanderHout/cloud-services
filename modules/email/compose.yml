@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mailhog:
     image: mailhog/mailhog
@@ -12,6 +10,23 @@ services:
     restart: unless-stopped
     networks:
       - mailhog-network
+  
+  email-service:
+    build:
+      context: .
+      dockerfile: DOCKERFILE
+    restart: always
+    container_name: email-service
+    environment:
+      PORT: 5000
+      HOST: 0.0.0.0
+      AMQP_HOST: amqp://localhost
+      JWT_SECRET_KEY: secret_key_123
+      QUEUE_RECEIVE_CONFIRMATION_REQUEST: mailConfirmed
+      QUEUE_CONFIRMATION_RESPONSE: mailConfirmedResponse
+      QUEUE_ENDSCORE_REQUEST: sendEndscoreEmail
+    depends_on:
+      - mailhog
 
 networks:
   mailhog-network:

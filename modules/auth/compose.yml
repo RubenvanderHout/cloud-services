@@ -15,6 +15,26 @@ services:
       - db-auth-data:/var/lib/mysql
     ports:
       - 5050:3306
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: DOCKERFILE
+    restart: always
+    container_name: auth-service
+    environment:
+      PORT: 5000
+      HOST: 0.0.0.0
+      DB_DATABASE: auth
+      DB_USER: user
+      DB_PASSWORD: magicman
+      DB_PORT: 5050
+      AMQP_HOST: amqp://localhost
+      JWT_SECRET_KEY: secret_key_123
+      QUEUE_RECEIVE_MAIL: mailConfirmedResponse
+      QUEUE_SEND_MAIL: confirmMail
+    depends_on:
+      - db-auth
   
 volumes:
   db-auth-data:
