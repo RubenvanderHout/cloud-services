@@ -58,7 +58,11 @@ async function main() {
     const userRepository = createUserRepository(pool);
 
     const amqpconn = await createAmqpConnection(amqpConfig);
-    amqpconn.createConsumer(queues.receivedEmailConfirmationQueue, emailReceivedHandler);
+    amqpconn.createConsumer(queues.receivedEmailConfirmationQueue, async ({ content, ack }) => {
+        userRepository.updateUserConfirmed(content);
+        ack();
+    });
+
     const sendEmailQueue = amqpconn.createProducer(queues.sendEmailQueue);
 
     app.put('/api/auth/authenticateToken', async (req, res) => {
@@ -133,6 +137,7 @@ async function main() {
 
     // Graceful shutdown
     process.on('SIGINT', async () => {
+        await amqpconn.closeAll();
         process.exit(0);
     });
 
@@ -140,13 +145,5 @@ async function main() {
         console.log(`Auth service running on port ${port}`);
     });
 }
-
-
-
-const emailReceivedHandler = async ({ content, ack }) => {
-    userRepository.updateUserConfirmed(content);
-    ack();
-};
-
 
 main();
