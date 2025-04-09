@@ -9,7 +9,7 @@ const createAmqpConnection = AmqpModule.createAmqpConnection;
 const port = process.env.PORT;
 const host = process.env.HOST;
 
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
+const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
 const EMAIL_HOST = process.env.EMAIL_HOST
 const EMAIL_PORT = process.env.EMAIL_PORT
