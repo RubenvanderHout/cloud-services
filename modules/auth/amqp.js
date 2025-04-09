@@ -5,7 +5,7 @@ async function createAmqpConnection(config){
     const channels = new Set();
 
     async function connect() {
-        connection = await amqp.connect(config.url);
+        connection = await amqp.connect(config);
         connection.on('close', () => {
             console.log('Reinitializing connection...');
             setTimeout(connect, config.reconnectDelay || 5000);

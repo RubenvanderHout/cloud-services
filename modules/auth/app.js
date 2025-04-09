@@ -35,7 +35,10 @@ const receivedEmailConfirmationQueue = process.env.QUEUE_RECEIVE_MAIL;
 const sendEmailQueue = process.env.QUEUE_SEND_MAIL;
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    hostname: process.env.AMQP_HOST,  
+    port: process.env.AMQP_PORT,     
+    username: process.env.AMQP_USER,  
+    password: process.env.AMQP_PASS ,
     reconnectDelay: 3000
 };
 

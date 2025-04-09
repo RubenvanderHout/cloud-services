@@ -1,11 +1,11 @@
 const amqp = require("amqplib");
 
-async function createAmqpConnection(config){
+async function createAmqpConnection(config) {
     let connection;
     const channels = new Set();
 
     async function connect() {
-        connection = await amqp.connect(config.url);
+        connection = await amqp.connect(config);
         connection.on('close', () => {
             console.log('Reinitializing connection...');
             setTimeout(connect, config.reconnectDelay || 5000);
@@ -75,13 +75,13 @@ async function createQueueConsumer(createChannelFn, close, queueConfig, handler)
 async function createQueueProducer(createChannelFn, close, queueConfig) {
     const channel = await createChannelFn();
 
-    if(queueConfig.name === null && queueConfig.options === null) {
+    if (queueConfig.name === null && queueConfig.options === null) {
         throw new Error("Should have correct queueconfig");
     }
 
     await channel.assertQueue(queueConfig.name, queueConfig.options);
 
-    async function sendMessageToQueue(message, options = {}){
+    async function sendMessageToQueue(message, options = {}) {
         try {
             let messageReturned = false;
             const handleReturn = () => {

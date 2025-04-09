@@ -4,7 +4,10 @@ const createAmqpConnection = AmqpModule.createAmqpConnection;
 const { storeTimerToDB, connectToMongoDB } = require("./repository.js");
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    hostname: process.env.AMQP_HOST,  
+    port: process.env.AMQP_PORT,     
+    username: process.env.AMQP_USER,  
+    password: process.env.AMQP_PASS ,
     reconnectDelay: 3000
 };
 const queues = {
@@ -18,7 +21,7 @@ const queues = {
 
 const REQUIRED_ENV_VARS = [
     "MONGO_DB","MONGO_URI", "MONGO_USER", "MONGO_PASSWORD",
-    "QUEUE_RECEIVE_TIMER_STARTED", "QUEUE_SEND_TIMER_ENDED"
+    "QUEUE_RECEIVE_TIMER_STARTED", "QUEUE_SEND_TIMER_ENDED", "AMQP_HOST"
 ];
 
 async function main(){

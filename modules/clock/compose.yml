@@ -6,11 +6,18 @@ services:
     restart: always
     container_name: clock-service
     environment:
-      MONGO_URI: "mongodb://timer:timer@localhost:27017"
+      MONGO_URI: "mongodb://timer:timer@clockDB:27017"
       MONGO_DB: "timerDb"
       MONGO_USER: "timer"
       MONGO_PASSWORD: "timer"
-
+      AMQP_HOST: webs5-rabbitmq  
+      AMQP_PORT: 5672
+      AMQP_USER: bigrabbit           
+      AMQP_PASSWORD: bigrabbit
+      QUEUE_RECEIVE_TIMER_STARTED: "competitionStarted"
+      QUEUE_SEND_TIMER_ENDED: "competitionEnded"
+    networks:
+      - app-network
     depends_on:
       - mongo
 
@@ -23,3 +30,7 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: timer
       MONGO_INITDB_ROOT_PASSWORD: timer
+
+# networks:
+#   app-network:
+#     external: true

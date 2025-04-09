@@ -1,3 +1,7 @@
+networks:
+  app-network:
+    driver: bridge
+
 include:
   - modules/clock/compose.yml
   - modules/auth/compose.yml
@@ -11,9 +15,15 @@ services:
   rabbitmq:
       image: rabbitmq:3.13-management-alpine
       container_name: webs5-rabbitmq
+      hostname: webs5-rabbitmq
       restart: always
       ports:
         - "5672:5672"
         - "15672:15672"
+      environment:
+        RABBITMQ_DEFAULT_USER: bigrabbit
+        RABBITMQ_DEFAULT_PASS: bigrabbit
+      networks:
+      - app-network
 
 

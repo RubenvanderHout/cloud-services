@@ -18,9 +18,11 @@ const QUEUE_CONFIRMATION_REQUEST = process.env.QUEUE_CONFIRMATION_REQUEST;
 const QUEUE_CONFIRMATION_RESPONSE = process.env.QUEUE_CONFIRMATION_RESPONSE;
 const QUEUE_ENDSCORE_REQUEST = process.env.QUEUE_ENDSCORE_REQUEST;
 
-
 const amqpConfig = {
-    url: 'amqp://localhost',
+    hostname: process.env.AMQP_HOST,  
+    port: process.env.AMQP_PORT,     
+    username: process.env.AMQP_USER,  
+    password: process.env.AMQP_PASS ,
     reconnectDelay: 3000
 };
 

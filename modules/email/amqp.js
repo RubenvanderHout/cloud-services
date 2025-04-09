@@ -4,14 +4,14 @@ async function createAmqpConnection(config){
     let connection;
     const channels = new Set();
 
-    async function connect() {
-        connection = await amqp.connect(config.url);
-        connection.on('close', () => {
-            console.log('Reinitializing connection...');
-            setTimeout(connect, config.reconnectDelay || 5000);
-        })
-        return connection;
-    }
+     async function connect() {
+          connection = await amqp.connect(config);
+          connection.on('close', () => {
+              console.log('Reinitializing connection...');
+              setTimeout(connect, config.reconnectDelay || 5000);
+          })
+          return connection;
+      }
 
     async function createManagedChannel() {
         const ch = await connection.createConfirmChannel();
