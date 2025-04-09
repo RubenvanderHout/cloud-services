@@ -1,0 +1,10 @@
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27017:27017
+    container_name: clockDB
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: timer
+      MONGO_INITDB_ROOT_PASSWORD: timer

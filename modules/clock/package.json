@@ -1,12 +1,18 @@
 {
   "name": "clock",
+  "type": "commonjs",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "amqplib": "^0.10.7",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.15.0"
+  }
 }
