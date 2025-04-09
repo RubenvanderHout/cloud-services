@@ -137,6 +137,7 @@ async function main() {
 
     // Graceful shutdown
     process.on('SIGINT', async () => {
+        await amqpconn.closeAll();
         process.exit(0);
     });
 

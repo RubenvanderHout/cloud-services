@@ -61,7 +61,7 @@ async function main() {
                 <body>
                     <h2>Confirm Your Email</h2>
                     <p>Hello, please confirm your email by clicking the button below:</p>
-                    <button><a href="http://localhost:7000/confirm/${token}">Confirm Email</a></button>
+                    <button><a href="http://localhost:5000/confirm/${token}">Confirm Email</a></button>
                 </body>
                 </html>
             `;
@@ -107,6 +107,12 @@ async function main() {
             return res.send('Confirmation received');
         });
     })
+
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+        await amqpconn.closeAll();
+        process.exit(0);
+    });
 
     app.listen(port, host, () => {
         console.info(`Started server on port ${port}`);
