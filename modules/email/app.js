@@ -1,7 +1,13 @@
 require("dotenv").config();
+const express = require("express")
 const nodemailer = require('nodemailer');
+const jwt = require("jsonwebtoken");
+
 const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
+
+const port = process.env.PORT;
+const host = process.env.HOST;
 
 const EMAIL_HOST = process.env.EMAIL_HOST
 const EMAIL_PORT = process.env.EMAIL_PORT
@@ -10,12 +16,11 @@ const QUEUE_CONFIRMATION_REQUEST = process.env.QUEUE_CONFIRMATION_REQUEST;
 const QUEUE_CONFIRMATION_RESPONSE = process.env.QUEUE_CONFIRMATION_RESPONSE;
 const QUEUE_ENDSCORE_REQUEST = process.env.QUEUE_ENDSCORE_REQUEST;
 
-// Create Mailhog transporter (no authentication needed)
-const transporter = nodemailer.createTransport({
-    host: EMAIL_HOST,
-    port: EMAIL_PORT,
-    ignoreTLS: true
-});
+
+const amqpConfig = {
+    url: 'amqp://localhost',
+    reconnectDelay: 3000
+};
 
 const queues = {
     confirmationRequest: {
@@ -31,8 +36,13 @@ const queues = {
 };
 
 async function main() {
-    const app = express();
+    const transporter = nodemailer.createTransport({
+        host: EMAIL_HOST,
+        port: EMAIL_PORT,
+        ignoreTLS: true
+    });
 
+    const app = express();
     app.use(express.json());
 
     const amqpconn = await createAmqpConnection(amqpConfig);
