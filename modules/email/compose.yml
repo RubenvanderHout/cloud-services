@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    environment:
+      - MH_UI_WEB_PATH=/
+    restart: unless-stopped
+    networks:
+      - mailhog-network
+
+networks:
+  mailhog-network:
+    driver: bridge
