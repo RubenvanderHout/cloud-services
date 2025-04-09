@@ -9,7 +9,7 @@ const createAmqpConnection = AmqpModule.createAmqpConnection;
 const port = process.env.PORT;
 const host = process.env.HOST;
 
-const JWT_SECRET = process.env.JWT_SECRET_KEY;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 const EMAIL_HOST = process.env.EMAIL_HOST
 const EMAIL_PORT = process.env.EMAIL_PORT
@@ -54,7 +54,7 @@ async function main() {
     amqpconn.createConsumer(queues.confirmationRequest, async ({ content, ack, nack }) => {
 
         try {
-            const token = jwt.sign({ username: content.username, email: content.email }, JWT_SECRET);
+            const token = jwt.sign({ username: content.username, email: content.email }, JWT_SECRET_KEY);
 
             const html = `
                 <!DOCTYPE html>
@@ -94,7 +94,7 @@ async function main() {
             return res.status(400).send('Empty value for token');
         }
 
-        jwt.verify(token, JWT_SECRET, (err, user) => {
+        jwt.verify(token, JWT_SECRET_KEY, (err, user) => {
             if (err) {
                 console.error('JWT verification failed:', err);
                 return res.status(401).send('Unauthorized');
