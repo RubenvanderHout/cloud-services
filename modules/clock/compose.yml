@@ -1,18 +1,4 @@
 services:
-  clock-service:
-    build:
-      context: .
-      dockerfile: DOCKERFILE
-    restart: always
-    container_name: clock-service
-    environment:
-      MONGO_URI: "mongodb://timer:timer@localhost:27017"
-      MONGO_DB: "timerDb"
-      MONGO_USER: "timer"
-      MONGO_PASSWORD: "timer"
-
-    depends_on:
-      - mongo
 
   mongo:
     image: mongo
