@@ -38,6 +38,7 @@ const photoUploaded = process.env.QUEUE_PHOTO_UPLOADED;
 const competitionStarted = process.env.QUEUE_SEND_MAIL;
 const registrationEnded = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED;
 const competetionCreated = process.env.QUEUE_COMPETITION_CREATED;
+const photoDeleted = process.env.QUEUE_PHOTO_DELETED;
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 
@@ -67,6 +68,9 @@ const queues = {
     },
     competetionCreated : {
         name: competetionCreated
+    },
+    photoDeleted : {
+        name: photoDeleted
     }
 };
 
@@ -89,6 +93,7 @@ async function main() {
     const startCompetitionQueue = await amqpconn.createProducer(queues.competitionStarted);
     const uploadPhotoQueue = await amqpconn.createProducer(queues.photoUploaded);
     const competetionCreatedQueue = await amqpconn.createProducer(queues.competetionCreated);
+    const photoDeletedQueue = await amqpconn.createProducer(queues.photoDeleted);
 
     amqpconn.createConsumer(queues.registrationEnded, (content, ack) => {
         targetRepo.setCompetitionFinished(content.competitionId)
@@ -130,14 +135,14 @@ async function main() {
     });
 
     // Add a picture to a competion
-    app.post('/api/targets/:targetId', upload.single('file'), async (req, res) => {
+    app.post('/api/targets/:competitionId', upload.single('file'), async (req, res) => {
 
         if(await targetRepo.isFinished()) {
             res.status(410).send("Competition is done no more picture allowed");
         }
 
         // TODO check if this id actualy exists
-        const competitionId = req.params.id;
+        const competitionId = req.params.competitionId;
 
         const fileBuffer = req.file.buffer;
         const filehash = crypto
@@ -150,8 +155,6 @@ async function main() {
 
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
-
-
 
         const target = {
             competition_id: competitionId,
@@ -167,10 +170,27 @@ async function main() {
         res.json(target).send("Images added to competition");
     });
 
-    // // Delete your picture from the competetion
-    // app.delete('/api/targets/:targetId/:email', async (req, res) => {
+    // Delete your picture from the competetion
+    app.delete('/api/targets/:competitionId/:email', async (req, res) => {
 
-    // });
+        const competitionId = req.params.competitionId;
+        const email = req.params.email;
+
+        const token = req.headers.authorization.split(' ')[1];
+        const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
+
+        if(email !== decodedToken.email){
+            res.status(403).send();
+        }
+        try {
+            await submissionRepo.deleteSubmission(competitionId, email);
+            photoDeletedQueue.send({ competition_id: competitionId, user_email: email })
+        } catch {
+            res.status(500);
+        }
+
+        res.status(200);
+    });
 
     // Get all targets for a city
     app.get('/api/targets/:city', async (req, res) => {
