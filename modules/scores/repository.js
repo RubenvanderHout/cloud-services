@@ -43,7 +43,8 @@ function createScoresRepository(pool) {
         getCompetition: (competitionId) => getCompetition(pool, competitionId),
         addScore: (userEmail, competitionId, pictureId, score) => addScore(pool, userEmail, competitionId, pictureId, score),
         getScoresForCompetition: (competitionId) => getScoresForCompetition(pool, competitionId),
-        getUserScores: (userEmail) => getUserScores(pool, userEmail)
+        getUserScores: (userEmail) => getUserScores(pool, userEmail),
+        deleteScore: (competitionId, userEmail) => deleteScore(pool, competitionId, userEmail),
     };
 }
 
@@ -92,6 +93,14 @@ async function createCompetition(competitionId, starttime, endtime) {
       [userEmail, competitionId]
     );
     return rows;
+  }
+
+  async function deleteScore(competitionId, userEmail) {
+    await this.pool.execute(
+      `DELETE FROM scores 
+       WHERE competition_id = ? AND user_email = ?`,
+      [competitionId, userEmail]
+    );
   }
 
 
