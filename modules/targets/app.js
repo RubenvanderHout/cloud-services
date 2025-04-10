@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const { v4: uuidv4 } = require('uuid');
-
+const multer = require("multer");
 const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
@@ -16,8 +16,6 @@ const createTargetRepo = repository.createTargetRepo;
 const REQUIRED_ENV_VARS = [
     "PORT", "HOST", "AMQP_HOST",
     "BLOB_ACCOUNT_NAME",
-    "BLOB_ACCOUNT_KEY",
-    "BLOB_CONTAINER_NAME",
     "QUEUE_PHOTO_UPLOADED", "QUEUE_COMPETITION_STARTED"
 ];
 
@@ -88,8 +86,8 @@ async function main() {
     const mongoConnection = await createMongoConnection(mongoDbConfig);
     const database = await mongoConnection.getDatabase("targets");
 
-    const submissionRepo = await createSubmissionRepo(database);
-    const targetRepo = await createTargetRepo(database);
+    const submissionRepo = await createSubmissionRepo(database, mongoConnection);
+    const targetRepo = await createTargetRepo(database, mongoConnection);
 
     const amqpconn = await createAmqpConnection(amqpConfig);
     const startCompetitionQueue = await amqpconn.createProducer(queues.competitionStarted);

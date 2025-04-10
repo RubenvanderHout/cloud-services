@@ -63,7 +63,7 @@ async function createContainerClient(blobServiceClient, containerName) {
     function listBlobs(containerClient) {
         try {
             const fileNames = [];
-            for await (const blob of containerClient.listBlobsFlat()) {
+            for (const blob of containerClient.listBlobsFlat()) {
                 fileNames.push(blob.name);
             }
 

@@ -10,8 +10,6 @@ async function createMongoConnection(config) {
 
         try {
             const client = new MongoClient(config.url, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
                 ...config.options
             });
 
