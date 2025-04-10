@@ -42,6 +42,8 @@ async function main(){
 
 
     function startTimer(content) {
+        const timerDuration = content.body.endTimeStamp - content.body.startTimeStamp;
+
         setTimeout(async () => {
             const { competitionId } = content.body;
 
@@ -60,22 +62,19 @@ async function main(){
                 ]);
             }
         }
-        , content.body.timerDuration);
+        , timerDuration);
     }
 
     
     
     async function storeTimer(content){
-        const { timerDuration, competitionId } = content.body;
+        const { startTimeStamp, endTimeStamp, competitionId } = content.body;
     
-        if (timerDuration === null || typeof timerDuration !== "number" || timerDuration < 0) {
-            return
-        }
-    
+        
         const timer = {
             competitionId: competitionId,
-            startTime: new Date(),
-            endTime: new Date(Date.now() + timerDuration)
+            startTime: startTimeStamp,
+            endTime: endTimeStamp,
         };
         
         try {
