@@ -6,7 +6,7 @@ const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
 const blobStorageModule = require("./blobstorage");
-const uploadBlob = blobStorageModule.uploadBlob;
+const createBlobService = blobStorageModule.createBlobService;
 
 const repository = require("./repository");
 const createMongoConnection = repository.createMongoConnection;
@@ -55,6 +55,9 @@ const mongoDbConfig = {
     reconnectDelay: 5000
 };
 
+const blobstorageConfig = {
+    accountName: process.env.BLOB_ACCOUNT_NAME,
+}
 
 const queues = {
     photoUploaded: {
@@ -82,6 +85,7 @@ async function main() {
     const app = express();
     app.use(express.json());
 
+    const blobStorageClient = createBlobService(blobstorageConfig);
 
     const mongoConnection = await createMongoConnection(mongoDbConfig);
     const database = await mongoConnection.getDatabase("targets");
@@ -103,14 +107,15 @@ async function main() {
     // Create a new competition
     app.post('/api/targets/', upload.single('file'), async (req, res) => {
 
+        const filename= req.body.filename
         const fileBuffer = req.file.buffer;
         const filehash = crypto
             .createHash('sha256')
             .update(fileBuffer)
             .digest('hex');
 
-        // Todo refactor blob storage api to work better
-        // blobStorageModule.uploadBlob()
+        const client = blobStorageModule.createContainerClient(blobStorageClient, competitionId)
+        client.uploadBlob(filename, fileBuffer);
 
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
@@ -119,7 +124,8 @@ async function main() {
             competition_id: uuidv4(),
             city: req.body.city,
             user_email: decodedToken.email,
-            picture_id: filehash,
+            picture_id: filename,
+            picture_hash: filehash,
             start_timestamp: req.body.start_timestamp,
             end_timestamp: req.body.end_timestamp,
             is_finished: false
@@ -141,17 +147,30 @@ async function main() {
             res.status(410).send("Competition is done no more picture allowed");
         }
 
-        // TODO check if this id actualy exists
         const competitionId = req.params.competitionId;
+        if (!targetExists){
+            res.status(404).send("Given competition doesn't exist");
+        }
 
+        if (await targetRepo.isFinished()) {
+            res.status(410).send("Competition is done no more picture allowed");
+        }
+
+        const filename = req.body.filename
         const fileBuffer = req.file.buffer;
         const filehash = crypto
             .createHash('sha256')
             .update(fileBuffer)
             .digest('hex');
 
-        // Todo refactor blob storage api to work better
-        // blobStorageModule.uploadBlob()
+        const validated = await targetRepo.validateFileHashIsUnique(competitionId, filehash);
+
+        if (!validated){
+            res.status(422).send("You are uploading the same exact file. This is not allowed")
+        };
+
+        const client = blobStorageModule.createContainerClient(blobStorageClient, competitionId)
+        client.uploadBlob(filename, fileBuffer);
 
         const token = req.headers.authorization.split(' ')[1];
         const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
@@ -159,7 +178,7 @@ async function main() {
         const target = {
             competition_id: competitionId,
             user_email: decodedToken.email,
-            picture_id: filehash,
+            picture_id: filename,
             submit_timestamp: req.body.submit_timestamp,
         }
 

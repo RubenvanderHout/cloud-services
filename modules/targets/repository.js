@@ -104,6 +104,11 @@ async function createTargetRepo(database, mongoConnection) {
         return await targetCollection.findOne({ target_id });
     }
 
+    async function targetExists(target_id) {
+        const target = await getTarget(target_id);
+        return !target;
+    }
+
     async function isFinished(target_id) {
         const target = await targetCollection.findOne({ target_id });
 
@@ -120,6 +125,11 @@ async function createTargetRepo(database, mongoConnection) {
 
     async function getAll(){
         return await targetCollection.find();
+    }
+
+    async function validateFileHashIsUnique(target_id, uploadedPictureHash) {
+        const target = await targetCollection.find({target_id});
+        return uploadedPictureHash !== target.picture_hash;
     }
 
     async function updateTarget(target_id, setFields = {}, unsetFields = []) {
@@ -153,6 +163,8 @@ async function createTargetRepo(database, mongoConnection) {
         createTarget,
         getTarget,
         getAll,
+        validateFileHashIsUnique,
+        targetExists,
         getTargetWithCity,
         isFinished,
         updateTarget,
