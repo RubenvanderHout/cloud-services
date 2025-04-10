@@ -40,8 +40,6 @@ const registrationEnded = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED;
 const competetionCreated = process.env.QUEUE_COMPETITION_CREATED;
 const photoDeleted = process.env.QUEUE_PHOTO_DELETED;
 
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-
 const amqpConfig = {
     url: 'amqp://localhost',
     reconnectDelay: 3000
@@ -117,13 +115,10 @@ async function main() {
         const client = blobStorageModule.createContainerClient(blobStorageClient, competitionId)
         client.uploadBlob(filename, fileBuffer);
 
-        const token = req.headers.authorization.split(' ')[1];
-        const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
-
         const target = {
             competition_id: uuidv4(),
             city: req.body.city,
-            user_email: decodedToken.email,
+            user_email: req.user.email,
             picture_id: filename,
             picture_hash: filehash,
             start_timestamp: req.body.start_timestamp,
@@ -172,12 +167,9 @@ async function main() {
         const client = blobStorageModule.createContainerClient(blobStorageClient, competitionId)
         client.uploadBlob(filename, fileBuffer);
 
-        const token = req.headers.authorization.split(' ')[1];
-        const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
-
         const target = {
             competition_id: competitionId,
-            user_email: decodedToken.email,
+            user_email: req.user.email,
             picture_id: filename,
             submit_timestamp: req.body.submit_timestamp,
         }
@@ -195,10 +187,7 @@ async function main() {
         const competitionId = req.params.competitionId;
         const email = req.params.email;
 
-        const token = req.headers.authorization.split(' ')[1];
-        const decodedToken = jwt.verify(token, JWT_SECRET_KEY);
-
-        if(email !== decodedToken.email){
+        if(email !== req.user.email){
             res.status(403).send();
         }
         try {

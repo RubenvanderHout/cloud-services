@@ -58,20 +58,15 @@ async function main() {
     const userRepository = createUserRepository(pool);
 
     const amqpconn = await createAmqpConnection(amqpConfig);
-    amqpconn.createConsumer(queues.receivedEmailConfirmationQueue, async ({ content, ack }) => {
-        userRepository.updateUserConfirmed(content);
-        ack();
-    });
-
     const sendEmailQueue = amqpconn.createProducer(queues.sendEmailQueue);
 
     app.put('/api/auth/authenticateToken', async (req, res) => {
         const token = req.body.authorization;
         if (!token) return res.status(401).send();
 
-        jwt.verify(token, JWT_SECRET_KEY, (err, rights) => {
+        jwt.verify(token, JWT_SECRET_KEY, (err, user) => {
             if (err) return res.sendStatus(403);
-            res.status(200).json(rights);
+            res.status(200).json(user);
         });
     });
 
@@ -91,7 +86,7 @@ async function main() {
 
         try {
             const pass = await bcrypt.hash(req.body.password, 10);
-            const user = { username: req.params.username, email: req.body.email, password: pass, confirmed: 0 };
+            const user = { username: req.params.username, email: req.body.email, password: pass };
             userRepository.saveUser(user);
             sendEmailQueue.send({ username: user.username, email: user.email });
             res.status(201).send('User registered successfully');
@@ -116,10 +111,6 @@ async function main() {
 
             if (user === null) {
                 return res.sendStatus(404);
-            }
-
-            if (user.confirmed === 0) {
-                return res.status(401).send('User not confirmed yet');
             }
 
             if (await bcrypt.compare(req.body.password, user.password)) {
