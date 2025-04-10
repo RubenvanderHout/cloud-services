@@ -13,7 +13,10 @@ const queues = {
     },
     sendTimerEndedQueue: {
         name: process.env.QUEUE_SEND_TIMER_ENDED,
-    }
+    },
+    sendRegistrationEndedQueue: {
+        name: process.env.QUEUE_SEND_REGISTRATION_ENDED,
+    },
 };
 
 const REQUIRED_ENV_VARS = [
@@ -34,6 +37,7 @@ async function main(){
     const amqpconn = await createAmqpConnection(amqpConfig);
     amqpconn.createConsumer(queues.receivedTimerStartedQueue, timerReceivedHandler);
     const sendTimerEndedQueue = amqpconn.createProducer(queues.sendTimerEndedQueue);
+    const sendRegistrationEndedQueue = amqpconn.createProducer(queues.sendRegistrationEndedQueue);
     console.log("Clock service is running...");
 
 
@@ -42,11 +46,18 @@ async function main(){
             const { competitionId } = content.body;
 
             if (timer) {
-                await sendTimerEndedQueue.send({
-                    body: {
-                        competitionId: competitionId
-                    }
-                });
+                Promise.all([
+                    sendTimerEndedQueue.send({
+                        body: {
+                            competitionId: competitionId
+                        }
+                    }),
+                    sendRegistrationEndedQueue.send({
+                        body: {
+                            competitionId: competitionId
+                        }
+                    })
+                ]);
             }
         }
         , content.body.timerDuration);
