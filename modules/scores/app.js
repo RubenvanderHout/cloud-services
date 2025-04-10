@@ -32,6 +32,7 @@ const receivedCompetitionCreatedQueue = process.env.QUEUE_COMPETITION_CREATED;
 const sendEndScoresQueue = process.env.QUEUE_SEND_END_SCORES;
 const receivedRegistrationEndedQueue = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED;
 const receivedSubmissionQueue = process.env.QUEUE_RECEIVE_SUBMISSION;
+const receivedSubmissionDeletedQueue = process.env.QUEUE_RECEIVE_SUBMISSION_DELETED;
 
 const amqpConfig = {
     url: 'amqp://localhost',
@@ -50,6 +51,9 @@ const queues = {
     },
     receivedSubmissionQueue: {
         name: receivedSubmissionQueue,
+    },
+    receivedSubmissionDeletedQueue: {
+        name: receivedSubmissionDeletedQueue,
     }
 };
 
@@ -109,6 +113,12 @@ async function main() {
             }
         });
         
+        ack();
+    });
+
+    amqpconn.createConsumer(queues.receivedSubmissionDeletedQueue, async ({ content, ack }) => {
+        const { competitionId, useremail } = content;
+        await scores.deleteScore(competitionId, useremail);
         ack();
     });
 
