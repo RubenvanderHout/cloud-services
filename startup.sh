@@ -36,6 +36,9 @@ for module in "${MODULES[@]}"; do
 done
 
 echo "Starting up the gateway"
+
+cd $BASE_DIR
+
 if [ -f "package.json" ]; then
     npm install
     npm start &  # Run in background
