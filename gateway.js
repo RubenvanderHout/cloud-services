@@ -21,19 +21,19 @@ const authServiceMiddleware = createServiceMiddleware(authsUrl, "/api/auth/");
 const scoresServiceMiddleware = createServiceMiddleware(scoresUrl, "/api/scores/");
 const targetsServiceMiddleware = createServiceMiddleware(targetsUrl, "/api/targets/");
 
-app.all('/api/auth/*path', authServiceMiddleware);
-app.all('/api/scores/*path', isAuthencitated, scoresServiceMiddleware);
-app.all('/api/targets/*path', isAuthencitated, targetsServiceMiddleware);
+app.all(['/api/auth/', '/api/auth/*path'], authServiceMiddleware);
+app.all(['/api/scores/', '/api/scores/*path'], isAuthencitated, scoresServiceMiddleware);
+app.all(['/api/targets/', '/api/targets/*path'], isAuthencitated, targetsServiceMiddleware);
 
 // Health check endpoint
 app.get("/api/health", (_req, res) => {
     res.status(200).json({
         status: "OK",
-        circuitState: breaker.stats,
     });
 });
 
-app.use((_err, _req, res, _next) => {
+app.use((err, _req, res, _next) => {
+    console.log(err);
     res.status(500).json({ error: 'Internal server error' });
 });
 

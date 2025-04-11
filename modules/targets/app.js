@@ -250,6 +250,11 @@ async function main() {
         process.exit(0);
     });
 
+    app.use((err, _req, res, _next) => {
+        console.log(err);
+        res.status(500).json({ error: 'Internal server error' });
+    });
+
     app.listen(port, host, () => {
         console.log(`Target service running on port ${port}`);
     });

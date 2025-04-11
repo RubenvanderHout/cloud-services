@@ -16,11 +16,8 @@ const CIRCUIT_BREAKER_OPTIONS = {
 
 export function createServiceMiddleware(serviceBaseUrl, servicePrefix) {
     async function circuitBreakerLogic(path, config) {
-        // Remove the service prefix (e.g., "/api/auth") from the incoming path
-        const targetPath = path.replace(servicePrefix, "");
-        // Add /api back
-        const realPath = "/api/" + targetPath;
-        const targetUrl = new URL(realPath, serviceBaseUrl).toString();
+        const targetPath = servicePrefix + path;
+        const targetUrl = new URL(targetPath, serviceBaseUrl).toString();
 
         const response = await fetch(targetUrl, {
             method: config.method,
@@ -88,6 +85,7 @@ export function createAuthenicationMiddleware(authServiceUrl) {
 
     async function callback(req, res, next){
         try {
+            // Split the word Bearer and the token itself
             const token = req.headers.authorization?.split(' ')[1];
             if (!token) return res.status(401).json({ error: 'Missing token' });
 
