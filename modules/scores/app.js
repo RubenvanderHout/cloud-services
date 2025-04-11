@@ -79,40 +79,40 @@ async function main() {
     });
 
     amqpconn.createConsumer(queues.receivedSubmissionQueue, async ({ content, ack }) => {
-        const { competitionId, submissionTime, distance, useremail } = content;
-        const competition = await scores.getCompetition(competitionId);
+        const { competition_id, submission_time, distance, user_email } = content;
+        const competition = await scores.getCompetition(competition_id);
 
         if (!competition) {
-            console.error(`Competition with ID ${competitionId} not found`);
+            console.error(`Competition with ID ${competition_id} not found`);
             ack();
             return;
         }
 
         const { endtime, starttime } = competition;
-        const score = calculateScore(endtime, starttime, submissionTime, distance);
-        await scores.saveScore(competitionId, useremail, score);
+        const score = calculateScore(endtime, starttime, submission_time, distance);
+        await scores.saveScore(competition_id, user_email, score);
         ack();
     });
 
 
     amqpconn.createConsumer(queues.receivedRegistrationEndedQueue, async ({ content, ack }) => {
-        const { competitionId } = content;
-        const competition = await scores.getCompetition(competitionId);
+        const { competition_id } = content;
+        const competition = await scores.getCompetition(competition_id);
         if (!competition) {
-            console.error(`Competition with ID ${competitionId} not found`);
+            console.error(`Competition with ID ${competition_id} not found`);
             ack();
             return;
         }
-        const scoresList = await scores.getScores(competitionId);
+        const scoresList = await scores.getScores(competition_id);
         if (!scoresList) {
-            console.error(`No scores found for competition with ID ${competitionId}`);
+            console.error(`No scores found for competition with ID ${competition_id}`);
             ack();
             return;
         }
 
         sendEndScoresQueue.send({
             body: {
-                competitionId: competitionId,
+                competition_id: competition_id,
                 scoresList: scoresList
             }
         });
@@ -121,17 +121,17 @@ async function main() {
     });
 
     amqpconn.createConsumer(queues.receivedSubmissionDeletedQueue, async ({ content, ack }) => {
-        const { competitionId, useremail } = content;
-        await scores.deleteScore(competitionId, useremail);
+        const { competition_id, user_email } = content;
+        await scores.deleteScore(competition_id, user_email);
         ack();
     });
 
 
 
 
-    app.get('/api/scores/:competitionId', async (req, res) => {
-        const competitionId = req.params.competitionId;
-        const scoresList = await scores.getScores(competitionId);
+    app.get('/api/scores/:competition_id', async (req, res) => {
+        const competition_id = req.params.competition_id;
+        const scoresList = await scores.getScores(competition_id);
 
         if (!scoresList) {
             return res.status(404).json({ message: 'Competition not found' });
@@ -140,10 +140,10 @@ async function main() {
         res.json(scoresList);
     });
 
-    app.get('/api/scores/:competitionId/:useremail', async (req, res) => {
-        const competitionId = req.params.competitionId;
-        const useremail = req.params.useremail;
-        const scoresList = await scores.getUserScores(competitionId, useremail);
+    app.get('/api/scores/:competition_id/:user_email', async (req, res) => {
+        const competition_id = req.params.competition_id;
+        const user_email = req.params.user_email;
+        const scoresList = await scores.getUserScores(competition_id, user_email);
 
         if (!scoresList) {
             return res.status(404).json({ message: 'Competition not found' });
@@ -175,8 +175,8 @@ function calculateMaxScore(endtime, starttime) {
     return maxScore;
 }
 
-function calculateScore(endtime, startTime, submissionTime, distance) {
-    const timeScore = endtime - submissionTime; // time score
+function calculateScore(endtime, startTime, submission_time, distance) {
+    const timeScore = endtime - submission_time; // time score
     const distanceScore = 100 - distance; // distance score
 
     // actual score is a percentage of the max score

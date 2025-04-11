@@ -39,67 +39,67 @@ async function doMigration(pool) {
 
 function createScoresRepository(pool) {
     return {
-        createCompetition: (competitionId, starttime, endtime) => createCompetition(pool, competitionId, starttime, endtime),
-        getCompetition: (competitionId) => getCompetition(pool, competitionId),
-        addScore: (userEmail, competitionId, pictureId, score) => addScore(pool, userEmail, competitionId, pictureId, score),
-        getScoresForCompetition: (competitionId) => getScoresForCompetition(pool, competitionId),
-        getUserScores: (userEmail) => getUserScores(pool, userEmail),
-        deleteScore: (competitionId, userEmail) => deleteScore(pool, competitionId, userEmail),
+        createCompetition: (competition_id, starttime, endtime) => createCompetition(pool, competition_id, starttime, endtime),
+        getCompetition: (competition_id) => getCompetition(pool, competition_id),
+        addScore: (user_email, competition_id, pictureId, score) => addScore(pool, user_email, competition_id, pictureId, score),
+        getScoresForCompetition: (competition_id) => getScoresForCompetition(pool, competition_id),
+        getUserScores: (user_email) => getUserScores(pool, user_email),
+        deleteScore: (competition_id, user_email) => deleteScore(pool, competition_id, user_email),
     };
 }
 
-async function createCompetition(competitionId, starttime, endtime) {
+async function createCompetition(competition_id, starttime, endtime) {
     const [result] = await this.pool.execute(
-      `INSERT INTO competitions (competitionId, starttime, endtime) 
+      `INSERT INTO competitions (competition_id, starttime, endtime) 
        VALUES (?, ?, ?)`,
-      [competitionId, starttime, endtime]
+      [competition_id, starttime, endtime]
     );
     return result.insertId;
   }
 
-  async function getCompetition(competitionId) {
+  async function getCompetition(competition_id) {
     const [rows] = await this.pool.execute(
-      `SELECT * FROM competitions WHERE competitionId = ?`,
-      [competitionId]
+      `SELECT * FROM competitions WHERE competition_id = ?`,
+      [competition_id]
     );
     return rows[0];
   }
 
-  async function addScore(userEmail, competitionId, pictureId, score) {
+  async function addScore(user_email, competition_id, pictureId, score) {
     await this.pool.execute(
       `INSERT INTO scores (user_email, competition_id, picture_id, score)
        VALUES (?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE score = VALUES(score)`,
-      [userEmail, competitionId, pictureId, score]
+      [user_email, competition_id, pictureId, score]
     );
   }
 
-  async function getScoresForCompetition(competitionId) {
+  async function getScoresForCompetition(competition_id) {
     const [rows] = await this.pool.execute(
       `SELECT user_email, picture_id, score 
        FROM scores 
        WHERE competition_id = ?
        ORDER BY score DESC`,
-      [competitionId]
+      [competition_id]
     );
     return rows;
   }
 
-  async function getUserScores(competitionId,userEmail) {
+  async function getUserScores(competition_id,user_email) {
     const [rows] = await this.pool.execute(
       `SELECT competition_id, picture_id, score 
        FROM scores 
        WHERE user_email = ? AND competition_id = ?`,
-      [userEmail, competitionId]
+      [user_email, competition_id]
     );
     return rows;
   }
 
-  async function deleteScore(competitionId, userEmail) {
+  async function deleteScore(competition_id, user_email) {
     await this.pool.execute(
       `DELETE FROM scores 
        WHERE competition_id = ? AND user_email = ?`,
-      [competitionId, userEmail]
+      [competition_id, user_email]
     );
   }
 

@@ -46,17 +46,16 @@ function main() {
     const sendComparedImageQueue = amqpconn.createProducer(queues.sendComparedImageQueue);
 
     amqpconn.createConsumer(queues.receivedComparedImageQueue, async ({ content, ack }) => {
-        const { competitionId, submissionTime, url1, url2, useremail } = content.body;
-        // pull image from bucket. One corresponding to the pictureId and the other to the competitionId
+        const { competition_id, submission_time, target_image_url, submission_image_url, user_email } = content.body;
 
-        const distance = await compareImages(url1, url2);
+        const distance = await compareImages(target_image_url, submission_image_url);
 
         sendComparedImageQueue.send({
             body: {
-                competitionId: competitionId,
-                submissionTime: submissionTime,
+                competition_id: competition_id,
+                submission_time: submission_time,
                 distance: distance,
-                useremail: useremail
+                user_email: user_email
             }
         });
         ack();

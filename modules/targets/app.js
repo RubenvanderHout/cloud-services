@@ -102,7 +102,7 @@ async function main() {
     const photoDeletedQueue = await amqpconn.createProducer(queues.photoDeleted);
 
     amqpconn.createConsumer(queues.registrationEnded, (content, ack) => {
-        targetRepo.setCompetitionFinished(content.competitionId)
+        targetRepo.setCompetitionFinished(content.competition_id)
         ack();
     })
 
@@ -116,7 +116,7 @@ async function main() {
             .update(fileBuffer)
             .digest('hex');
 
-        const client = blobStorageModule.createContainerClient(blobStorageClient, competitionId)
+        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id)
         client.uploadBlob(filename, fileBuffer);
 
         const target = {
@@ -140,13 +140,13 @@ async function main() {
     });
 
     // Add a picture to a competion
-    app.post('/api/targets/:competitionId', upload.single('file'), async (req, res) => {
+    app.post('/api/targets/:competition_id', upload.single('file'), async (req, res) => {
 
         if(await targetRepo.isFinished()) {
             res.status(410).send("Competition is done no more picture allowed");
         }
 
-        const competitionId = req.params.competitionId;
+        const competition_id = req.params.competition_id;
         if (!targetExists){
             res.status(404).send("Given competition doesn't exist");
         }
@@ -162,17 +162,17 @@ async function main() {
             .update(fileBuffer)
             .digest('hex');
 
-        const validated = await targetRepo.validateFileHashIsUnique(competitionId, filehash);
+        const validated = await targetRepo.validateFileHashIsUnique(competition_id, filehash);
 
         if (!validated){
             res.status(422).send("You are uploading the same exact file. This is not allowed")
         };
 
-        const client = blobStorageModule.createContainerClient(blobStorageClient, competitionId)
+        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id)
         client.uploadBlob(filename, fileBuffer);
 
         const target = {
-            competition_id: competitionId,
+            competition_id: competition_id,
             user_email: req.user.email,
             picture_id: filename,
             submit_timestamp: req.body.submit_timestamp,
@@ -186,17 +186,17 @@ async function main() {
     });
 
     // Delete your picture from the competetion
-    app.delete('/api/targets/:competitionId/:email', async (req, res) => {
+    app.delete('/api/targets/:competition_id/:email', async (req, res) => {
 
-        const competitionId = req.params.competitionId;
+        const competition_id = req.params.competition_id;
         const email = req.params.email;
 
         if(email !== req.user.email){
             res.status(403).send();
         }
         try {
-            await submissionRepo.deleteSubmission(competitionId, email);
-            photoDeletedQueue.send({ competition_id: competitionId, user_email: email })
+            await submissionRepo.deleteSubmission(competition_id, email);
+            photoDeletedQueue.send({ competition_id: competition_id, user_email: email })
         } catch {
             res.status(500);
         }
