@@ -1,5 +1,5 @@
 services:
-  mongo:
+  mongo-clock:
     image: mongo
     restart: always
     ports:
