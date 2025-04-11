@@ -15,7 +15,7 @@ const CIRCUIT_BREAKER_OPTIONS = {
     rollingCountTimeout: rollingCountTimeout,
 };
 
-function createServiceMiddleware(serviceUrl) {
+export function createServiceMiddleware(serviceUrl) {
     async function circuitBreakerLogic(path, config) {
         const response = await fetch(`${serviceUrl}${path}`, {
             method: config.method,
@@ -64,7 +64,7 @@ function createServiceMiddleware(serviceUrl) {
     return callback;
 }
 
-function createAuthenicationMiddleware(authServiceUrl) {
+export function createAuthenicationMiddleware(authServiceUrl) {
     async function circuitBreakerLogic(token) {
         const response = await fetch(authServiceUrl, {
             method: 'POST',
@@ -101,8 +101,3 @@ function createAuthenicationMiddleware(authServiceUrl) {
 
     return callback;
 }
-
-module.exports = {
-    createServiceMiddleware: createServiceMiddleware,
-    createAuthenicationMiddleware: createAuthenicationMiddleware,
-};

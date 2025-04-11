@@ -1,10 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
-import MiddlewareModule from "./middleware.js";
-
-const createAuthenicationMiddleware = MiddlewareModule.createAuthenicationMiddleware;
-const createServiceMiddleware = MiddlewareModule.createServiceMiddleware;
+import { createAuthenicationMiddleware, createServiceMiddleware } from "./middleware.js";
 
 const port = process.env.PORT;
 const host = process.env.HOST;
