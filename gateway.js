@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import { generateSwaggerSpec } from './api-docs.js';
 import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
+
 import { createAuthenicationMiddleware, createServiceMiddleware } from "./middleware.js";
 
 const port = process.env.PORT;
@@ -18,57 +19,8 @@ const app = express();
 app.use(express.json());
 
 
-const options = {
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'API Gateway',
-        version: '1.0.0',
-        description: 'Documentation for the API Gateway that routes requests to microservices',
-      },
-      servers: [
-        {
-          url: `http://${host}:${port}`,
-          description: 'Development server',
-        },
-      ],
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-          }
-        }
-      },
-      security: [{
-        bearerAuth: []
-      }]
-    },
-    apis: ['./*.js'], // files containing annotations as above
-  };
-  
-  const specs = swaggerJsdoc(options);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-
-  /**
- * @swagger
- * /api/health:
- *   get:
- *     summary: Check API health status
- *     description: Returns the health status of the API gateway
- *     responses:
- *       200:
- *         description: API is healthy
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: OK
- */
+const swaggerSpec = generateSwaggerSpec(`http://${host}:${port}`);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const isAuthencitated = createAuthenicationMiddleware(authEndpointURL);
 
