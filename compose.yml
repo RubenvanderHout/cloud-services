@@ -2,9 +2,7 @@ include:
   - modules/clock/compose.yml
   - modules/auth/compose.yml
   - modules/email/compose.yml
-  # - modules/image/compose.yml
-  # - modules/scores/compose.yml
-  # - modules/target/compose.yml
+  - modules/scores/compose.yml
   
 
 services:
