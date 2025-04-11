@@ -10,17 +10,12 @@ trap 'cleanup' INT
 
 cleanup() {
     echo "Cleaning up..."
-    echo "Stopping Docker containers..."
-    docker-compose down
     echo "Stopping all npm processes..."
     for pid in "${pids[@]}"; do
         kill "$pid" 2>/dev/null  # Kill each background process
     done
     exit 1
 }
-
-echo "Starting up services with compose.yml"
-docker-compose up -d --build
 
 start_module() {
     local module_dir="$1"

@@ -10,9 +10,9 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: magicman
     volumes:
-      - db-auth-data:/var/lib/mysql
+      - db-scores-data:/var/lib/mysql
     ports:
       - 6050:3306
 
 volumes:
-  db-auth-data:
+  db-scores-data:

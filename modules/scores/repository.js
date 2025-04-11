@@ -20,9 +20,8 @@ async function doMigration(pool) {
     CREATE TABLE IF NOT EXISTS competitions (
       competition_id VARCHAR(250) PRIMARY KEY NOT NULL,
       starttime BIGINT NOT NULL COMMENT 'Unix timestamp',
-      endtime BIGINT NOT NULL COMMENT 'Unix timestamp',
-    ) 
-  `);
+      endtime BIGINT NOT NULL COMMENT 'Unix timestamp'
+    )`);
 
   // Create scores table
   await pool.execute(`
@@ -32,9 +31,8 @@ async function doMigration(pool) {
       picture_id VARCHAR(250) NOT NULL,
       score INT NOT NULL,
       PRIMARY KEY (user_email, competition_id, picture_id),
-      FOREIGN KEY (competition_id) REFERENCES competitions(competition_id),
-    ) 
-  `);
+      FOREIGN KEY (competition_id) REFERENCES competitions(competition_id)
+    )`);
 }
 
 function createScoresRepository(pool) {
@@ -50,7 +48,7 @@ function createScoresRepository(pool) {
 
 async function createCompetition(competition_id, starttime, endtime) {
     const [result] = await this.pool.execute(
-      `INSERT INTO competitions (competition_id, starttime, endtime) 
+      `INSERT INTO competitions (competition_id, starttime, endtime)
        VALUES (?, ?, ?)`,
       [competition_id, starttime, endtime]
     );
@@ -76,8 +74,8 @@ async function createCompetition(competition_id, starttime, endtime) {
 
   async function getScoresForCompetition(competition_id) {
     const [rows] = await this.pool.execute(
-      `SELECT user_email, picture_id, score 
-       FROM scores 
+      `SELECT user_email, picture_id, score
+       FROM scores
        WHERE competition_id = ?
        ORDER BY score DESC`,
       [competition_id]
@@ -87,8 +85,8 @@ async function createCompetition(competition_id, starttime, endtime) {
 
   async function getUserScores(competition_id,user_email) {
     const [rows] = await this.pool.execute(
-      `SELECT competition_id, picture_id, score 
-       FROM scores 
+      `SELECT competition_id, picture_id, score
+       FROM scores
        WHERE user_email = ? AND competition_id = ?`,
       [user_email, competition_id]
     );
@@ -97,7 +95,7 @@ async function createCompetition(competition_id, starttime, endtime) {
 
   async function deleteScore(competition_id, user_email) {
     await this.pool.execute(
-      `DELETE FROM scores 
+      `DELETE FROM scores
        WHERE competition_id = ? AND user_email = ?`,
       [competition_id, user_email]
     );
