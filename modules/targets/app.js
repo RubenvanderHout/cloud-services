@@ -16,9 +16,11 @@ const createTargetRepo = repository.createTargetRepo;
 const REQUIRED_ENV_VARS = [
     "PORT", "HOST", "AMQP_HOST",
     "BLOB_ACCOUNT_NAME", "BLOB_CONNECTION_STRING", "BLOB_ACCOUNT_KEY",
-    "QUEUE_PHOTO_UPLOADED", "QUEUE_COMPETITION_STARTED",
-    "QUEUE_RECEIVE_REGISTRATION_ENDED", "QUEUE_COMPETITION_CREATED",
-    "QUEUE_PHOTO_DELETED",
+    "QUEUE_PHOTO_UPLOADED_TARGET_IMAGE",
+    "QUEUE_COMPETITION_STARTED_TARGET_CLOCK",
+    "QUEUE_RECEIVE_REGISTRATION_ENDED_CLOCK_TARGET",
+    "QUEUE_COMPETITION_CREATED_TARGET_SCORE",
+    "QUEUE_PHOTO_DELETED_TARGET_SCORE",
     "BLOB_CONNECTION_STRING", "BLOB_ACCOUNT_KEY",
 ];
 
@@ -35,11 +37,11 @@ function parseEnvVariables(requiredVars) {
 const port = process.env.PORT
 const host = process.env.HOST
 
-const photoUploaded = process.env.QUEUE_PHOTO_UPLOADED;
-const competitionStarted = process.env.QUEUE_SEND_MAIL;
-const registrationEnded = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED;
-const competetionCreated = process.env.QUEUE_COMPETITION_CREATED;
-const photoDeleted = process.env.QUEUE_PHOTO_DELETED;
+const photoUploaded = process.env.QUEUE_PHOTO_UPLOADED_TARGET_IMAGE;
+const competitionStarted = process.env.QUEUE_COMPETITION_STARTED_TARGET_CLOCK;
+const registrationEnded = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED_CLOCK_TARGET;
+const competetionCreated = process.env.QUEUE_COMPETITION_CREATED_TARGET_SCORE;
+const photoDeleted = process.env.QUEUE_PHOTO_DELETED_TARGET_SCORE;
 
 const amqpConfig = {
     url: 'amqp://localhost',

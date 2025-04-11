@@ -1,5 +1,5 @@
 require("dotenv").config();
-const AmqpModule = require("./amqp");
+const AmqpModule = require("./amqp.js");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 const { storeTimerToDB, connectToMongoDB } = require("./repository.js");
 
@@ -9,19 +9,21 @@ const amqpConfig = {
 };
 const queues = {
     receivedTimerStartedQueue: {
-        name: process.env.QUEUE_RECEIVE_TIMER_STARTED,
-    },
-    sendTimerEndedQueue: {
-        name: process.env.QUEUE_SEND_TIMER_ENDED,
+        name: process.env.QUEUE_COMPETITION_STARTED_TARGET_CLOCK,
     },
     sendRegistrationEndedQueue: {
-        name: process.env.QUEUE_SEND_REGISTRATION_ENDED,
+        name: process.env.QUEUE_REGISTRATION_ENDED_CLOCK_TARGET,
+    },
+    sendTimerEndedQueue: {
+        name: process.env.QUEUE_TIMER_ENDED_CLOCK_SCORE,
     },
 };
 
 const REQUIRED_ENV_VARS = [
     "MONGO_DB","MONGO_URI", "MONGO_USER", "MONGO_PASSWORD",
-    "QUEUE_RECEIVE_TIMER_STARTED", "QUEUE_SEND_TIMER_ENDED", "QUEUE_SEND_REGISTRATION_ENDED"
+    "QUEUE_COMPETITION_STARTED_TARGET_CLOCK",
+    "QUEUE_REGISTRATION_ENDED_CLOCK_TARGET",
+    "QUEUE_TIMER_ENDED_CLOCK_SCORE",
 ];
 
 async function main(){
@@ -65,18 +67,18 @@ async function main(){
         , timerDuration);
     }
 
-    
-    
+
+
     async function storeTimer(content){
         const { startTimeStamp, endTimeStamp, competitionId } = content.body;
-    
-        
+
+
         const timer = {
             competitionId: competitionId,
             startTime: startTimeStamp,
             endTime: endTimeStamp,
         };
-        
+
         try {
             await storeTimerToDB(timerRepository, timer);
         } catch (err) {

@@ -11,8 +11,12 @@ const createAmqpConnection = AmqpModule.createAmqpConnection;
 const REQUIRED_ENV_VARS = [
     "PORT", "HOST", "DB_DATABASE",
     "DB_USER", "DB_PASSWORD", "DB_PORT",
-    "AMQP_HOST", "QUEUE_COMPETITION_CREATED",
-    "QUEUE_SEND_END_SCORES", "QUEUE_RECEIVE_REGISTRATION_ENDED"
+    "AMQP_HOST",
+    "QUEUE_COMPETITION_CREATED_TARGET_SCORE",
+    "QUEUE_SEND_END_SCORES_SCORE_EMAIL",
+    "QUEUE_RECEIVE_REGISTRATION_ENDED_CLOCK_SCORE",
+    "QUEUE_RECEIVE_SUBMISSION_IMAGE_SCORE",
+    "QUEUE_RECEIVE_SUBMISSION_DELETED_TARGET_SCORE",
 ];
 
 function parseEnvVariables(requiredVars) {
@@ -28,11 +32,11 @@ function parseEnvVariables(requiredVars) {
 const port = process.env.PORT
 const host = process.env.HOST
 
-const receivedCompetitionCreatedQueue = process.env.QUEUE_COMPETITION_CREATED;
-const sendEndScoresQueue = process.env.QUEUE_SEND_END_SCORES;
-const receivedRegistrationEndedQueue = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED;
-const receivedSubmissionQueue = process.env.QUEUE_RECEIVE_SUBMISSION;
-const receivedSubmissionDeletedQueue = process.env.QUEUE_RECEIVE_SUBMISSION_DELETED;
+const receivedCompetitionCreatedQueue = process.env.QUEUE_COMPETITION_CREATED_TARGET_SCORE;
+const sendEndScoresQueue = process.env.QUEUE_SEND_END_SCORES_SCORE_EMAIL;
+const receivedRegistrationEndedQueue = process.env.QUEUE_RECEIVE_REGISTRATION_ENDED_CLOCK_SCORE;
+const receivedSubmissionQueue = process.env.QUEUE_RECEIVE_SUBMISSION_IMAGE_SCORE;
+const receivedSubmissionDeletedQueue = process.env.QUEUE_RECEIVE_SUBMISSION_DELETED_TARGET_SCORE;
 
 const amqpConfig = {
     url: 'amqp://localhost',
@@ -112,7 +116,7 @@ async function main() {
                 scoresList: scoresList
             }
         });
-        
+
         ack();
     });
 
@@ -122,7 +126,7 @@ async function main() {
         ack();
     });
 
-   
+
 
 
     app.get('/api/scores/:competitionId', async (req, res) => {
@@ -179,4 +183,3 @@ function calculateScore(endtime, startTime, submissionTime, distance) {
     const score = ((timeScore + distanceScore) / calculateMaxScore(endtime, startTime)) * 100; // percentage of max score
     return score;
 }
-    

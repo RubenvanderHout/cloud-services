@@ -13,8 +13,8 @@ const createAmqpConnection = AmqpModule.createAmqpConnection;
 const REQUIRED_ENV_VARS = [
     "PORT", "HOST", "DB_DATABASE",
     "DB_USER", "DB_PASSWORD", "DB_PORT",
-    "AMQP_HOST", "JWT_SECRET_KEY", "QUEUE_RECEIVE_MAIL",
-    "QUEUE_SEND_MAIL"
+    "AMQP_HOST", "JWT_SECRET_KEY",
+    "QUEUE_SEND_MAIL_AUTH_EMAIL"
 ];
 
 function parseEnvVariables(requiredVars) {
@@ -31,8 +31,7 @@ const port = process.env.PORT
 const host = process.env.HOST
 
 const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-const receivedEmailConfirmationQueue = process.env.QUEUE_RECEIVE_MAIL;
-const sendEmailQueue = process.env.QUEUE_SEND_MAIL;
+const sendEmailQueue = process.env.QUEUE_SEND_MAIL_AUTH_EMAIL;
 
 const amqpConfig = {
     url: 'amqp://localhost',
@@ -40,9 +39,6 @@ const amqpConfig = {
 };
 
 const queues = {
-    receivedEmailConfirmationQueue: {
-        name: receivedEmailConfirmationQueue,
-    },
     sendEmailQueue: {
         name: sendEmailQueue,
     }
