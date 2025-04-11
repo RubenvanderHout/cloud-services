@@ -2,14 +2,12 @@ require("dotenv").config();
 const { BlobServiceClient } = require("@azure/storage-blob");
 const { DefaultAzureCredential } = require('@azure/identity');
 
+
 function createBlobService(config) {
 
     function initialize() {
         try {
-            const blobServiceClient = new BlobServiceClient(
-                `https://${config.accountName}.blob.core.windows.net`,
-                new DefaultAzureCredential()
-            );
+            const blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionString);
             return blobServiceClient;
         } catch (err) {
             console.log(`Error: ${err.message}`);

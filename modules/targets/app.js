@@ -15,8 +15,11 @@ const createTargetRepo = repository.createTargetRepo;
 
 const REQUIRED_ENV_VARS = [
     "PORT", "HOST", "AMQP_HOST",
-    "BLOB_ACCOUNT_NAME",
-    "QUEUE_PHOTO_UPLOADED", "QUEUE_COMPETITION_STARTED"
+    "BLOB_ACCOUNT_NAME", "BLOB_CONNECTION_STRING", "BLOB_ACCOUNT_KEY",
+    "QUEUE_PHOTO_UPLOADED", "QUEUE_COMPETITION_STARTED",
+    "QUEUE_RECEIVE_REGISTRATION_ENDED", "QUEUE_COMPETITION_CREATED",
+    "QUEUE_PHOTO_DELETED",
+    "BLOB_CONNECTION_STRING", "BLOB_ACCOUNT_KEY",
 ];
 
 function parseEnvVariables(requiredVars) {
@@ -53,6 +56,7 @@ const mongoDbConfig = {
 
 const blobstorageConfig = {
     accountName: process.env.BLOB_ACCOUNT_NAME,
+    connectionString: process.env.BLOB_CONNECTION_STRING,
 }
 
 const queues = {
