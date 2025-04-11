@@ -1,6 +1,7 @@
-require("dotenv").config();
-const CircuitBreaker = require("opossum");
-const fetch = require("node-fetch");
+import dotenv from "dotenv";
+dotenv.config();
+import CircuitBreaker from "opossum";
+import fetch from "node-fetch";
 
 const timeout = process.env.CIRCUIT_BREAKER_TIMEOUT;
 const errorThresholdPercentage =

@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node gateway.js"
   },
+  "type": "module",
   "author": "",
   "license": "ISC",
   "dependencies": {

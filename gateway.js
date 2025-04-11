@@ -1,7 +1,8 @@
-require("dotenv").config();
-const express = require("express");
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import MiddlewareModule from "./middleware.js";
 
-const MiddlewareModule = require('./middleware');
 const createAuthenicationMiddleware = MiddlewareModule.createAuthenicationMiddleware;
 const createServiceMiddleware = MiddlewareModule.createServiceMiddleware;
 
