@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   db-auth:
     image: mysql:8.3.0
@@ -15,8 +13,5 @@ services:
       - db-auth-data:/var/lib/mysql
     ports:
       - 5050:3306
-
-  
-  
 volumes:
   db-auth-data:

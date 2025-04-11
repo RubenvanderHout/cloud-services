@@ -43,12 +43,12 @@ const queues = {
 };
 
 
-function main() {
+async function main() {
     parseEnvVariables(REQUIRED_ENV_VARS);
 
-    const amqpconn = createAmqpConnection(amqpConfig);
+    const amqpconn = await createAmqpConnection(amqpConfig);
 
-    const sendComparedImageQueue = amqpconn.createProducer(queues.sendScoreSubmissionQueue);
+    const sendComparedImageQueue = await amqpconn.createProducer(queues.sendScoreSubmissionQueue);
 
     amqpconn.createConsumer(queues.receivedPhotoQueue, async ({ content, ack }) => {
         const { competition_id, submission_time, target_image_url, submission_image_url, user_email } = content.body;
@@ -70,15 +70,15 @@ function main() {
 
 async function compareImages(url1, url2) {
     const comparisonEndpoint = 'https://api.imagga.com/v2/images-similarity/categories/' + CATEGORYID;
-   
+
     const authString = `${API_KEY}:${API_SECRET}`;
     const authBase64 = Buffer.from(authString).toString('base64');
-    
+
 
     const url = new URL(comparisonEndpoint);
     url.searchParams.append('image_url', url1);
     url.searchParams.append('image2_url', url2);
-    
+
     try {
         const response = await fetch(url.toString(), {
             method: 'GET',
@@ -86,13 +86,13 @@ async function compareImages(url1, url2) {
                 'Authorization': `Basic ${authBase64}`
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`API request failed with status ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         return data.result.distance;
     } catch (error) {
         console.error('Error comparing images:', error);

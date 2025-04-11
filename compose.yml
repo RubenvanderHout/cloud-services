@@ -3,7 +3,7 @@ include:
   - modules/auth/compose.yml
   - modules/email/compose.yml
   - modules/scores/compose.yml
-  
+  - modules/target/compose.yml
 
 services:
   rabbitmq:
@@ -13,5 +13,3 @@ services:
       ports:
         - "5672:5672"
         - "15672:15672"
-
-
