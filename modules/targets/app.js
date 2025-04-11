@@ -79,6 +79,10 @@ const queues = {
     }
 };
 
+const containerClientConfig = {
+    publicAccess: 'blob'
+}
+
 const upload = multer();
 
 async function main() {
@@ -116,25 +120,35 @@ async function main() {
             .update(fileBuffer)
             .digest('hex');
 
-        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id)
-        client.uploadBlob(filename, fileBuffer);
+        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id, containerClientConfig)
+        const targetPictureUrl =client.uploadBlob(filename, fileBuffer);
 
         const target = {
             competition_id: uuidv4(),
             city: req.body.city,
             user_email: req.user.email,
             picture_id: filename,
+            picture_url: targetPictureUrl,
             picture_hash: filehash,
             start_timestamp: req.body.start_timestamp,
             end_timestamp: req.body.end_timestamp,
             is_finished: false
         }
-
         await targetRepo.createTarget(target);
 
-        await startCompetitionQueue.send(target);
-        await uploadPhotoQueue.send(target);
-        await competetionCreatedQueue.send(target);
+        const clockMessage = {
+            competition_id: target.competition_id,
+            start_timestamp: target.start_timestamp,
+            end_timestamp: target.end_timestamp,
+        };
+        await startCompetitionQueue.send(clockMessage);
+
+        const scoresMessage = {
+            competition_id: target.competition_id,
+            city: target.city,
+            user_email: target.user_email,
+        };
+        await competetionCreatedQueue.send(scoresMessage);
 
         res.json(target).send("Competition created");
     });
@@ -168,21 +182,26 @@ async function main() {
             res.status(422).send("You are uploading the same exact file. This is not allowed")
         };
 
-        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id)
-        client.uploadBlob(filename, fileBuffer);
+        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id, containerClientConfig)
+        const submission_image_url = client.uploadBlob(filename, fileBuffer);
 
-        const target = {
+        const target_image_url = targetRepo.getTargetPictureUrl(competition_id);
+
+        const unixTimestamp = Math.floor(Date.now() / 1000);
+
+        const submission = {
             competition_id: competition_id,
+            submission_time: unixTimestamp,
             user_email: req.user.email,
-            picture_id: filename,
-            submit_timestamp: req.body.submit_timestamp,
+            target_image_url: target_image_url,
+            submission_image_url: submission_image_url,
         }
 
-        await submissionRepo.createSubmission(target);
+        await submissionRepo.createSubmission(submission);
 
-        await uploadPhotoQueue.send(target);
+        await uploadPhotoQueue.send(submission);
 
-        res.json(target).send("Images added to competition");
+        res.json(submission).send("Images added to competition");
     });
 
     // Delete your picture from the competetion
@@ -192,7 +211,7 @@ async function main() {
         const email = req.params.email;
 
         if(email !== req.user.email){
-            res.status(403).send();
+            res.status(403).send("Forbidden");
         }
         try {
             await submissionRepo.deleteSubmission(competition_id, email);

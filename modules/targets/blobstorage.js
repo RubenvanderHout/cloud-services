@@ -1,6 +1,5 @@
 require("dotenv").config();
 const { BlobServiceClient } = require("@azure/storage-blob");
-const { DefaultAzureCredential } = require('@azure/identity');
 
 
 function createBlobService(config) {
@@ -8,6 +7,7 @@ function createBlobService(config) {
     function initialize() {
         try {
             const blobServiceClient = BlobServiceClient.fromConnectionString(config.connectionString);
+            console.log("Succesfully connected to BlobService")
             return blobServiceClient;
         } catch (err) {
             console.log(`Error: ${err.message}`);
@@ -18,14 +18,14 @@ function createBlobService(config) {
 }
 
 
-async function createContainerClient(blobServiceClient, containerName) {
+async function createContainerClient(blobServiceClient, containerName, config) {
 
     let containerClient;
 
     async function initialize() {
         try {
             containerClient = blobServiceClient.getContainerClient(containerName);
-             await containerClient.create();
+             await containerClient.create(config);
         } catch (err) {
             console.log(`Error: ${err.message}`);
         }
@@ -39,7 +39,7 @@ async function createContainerClient(blobServiceClient, containerName) {
             console.log(
                 `Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}`
             );
-            return blockBlobClient;
+            return blockBlobClient.url;;
 
         } catch (err) {
             console.log(`Error: ${err.message}`);
