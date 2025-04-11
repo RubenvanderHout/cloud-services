@@ -49,10 +49,15 @@ const amqpConfig = {
 };
 
 const mongoDbConfig = {
-    url: 'mongodb://localhost:27017',
+    url: process.env.MONGO_URI,
+    auth: {
+        username: process.env.MONGO_USER,
+        password: process.env.MONGO_PASSWORD
+    },
     options: {
         serverSelectionTimeoutMS: 3000
     },
+    db: process.env.MONGO_DB,
     reconnectDelay: 5000
 };
 
@@ -94,7 +99,7 @@ async function main() {
     const blobStorageClient = createBlobService(blobstorageConfig);
 
     const mongoConnection = await createMongoConnection(mongoDbConfig);
-    const database = await mongoConnection.getDatabase("targets");
+    const database = await mongoConnection.getDatabase(mongoDbConfig.db);
 
     const submissionRepo = await createSubmissionRepo(database, mongoConnection);
     const targetRepo = await createTargetRepo(database, mongoConnection);
