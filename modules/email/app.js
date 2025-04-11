@@ -1,12 +1,9 @@
 require("dotenv").config();
-const express = require("express")
 const nodemailer = require('nodemailer');
 
 const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
-const port = process.env.PORT;
-const host = process.env.HOST;
 
 const EMAIL_HOST = process.env.EMAIL_HOST
 const EMAIL_PORT = process.env.EMAIL_PORT
@@ -35,9 +32,6 @@ async function main() {
         port: EMAIL_PORT,
         ignoreTLS: true
     });
-
-    const app = express();
-    app.use(express.json());
 
     const amqpconn = await createAmqpConnection(amqpConfig);
 
@@ -77,10 +71,6 @@ async function main() {
     process.on('SIGINT', async () => {
         await amqpconn.closeAll();
         process.exit(0);
-    });
-
-    app.listen(port, host, () => {
-        console.info(`Started server on port ${port}`);
     });
 }
 
