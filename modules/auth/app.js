@@ -99,6 +99,8 @@ async function main() {
 
     app.post('/api/auth/login/:username', async (req, res) => {
 
+        console.log(req);
+
         if (req.params.username === null || typeof req.params.username !== "string") {
             return res.status(400).send('Username not correct');
         }
@@ -117,7 +119,7 @@ async function main() {
             if (result) {
                 const rights = { username: user.username, email: user.email };
                 const accessToken = jwt.sign(rights, JWT_SECRET_KEY);
-                res.json({ token: accessToken });
+                res.json({ token: accessToken }).send();
             } else {
                 res.status(401).send('Incorrect password');
             }

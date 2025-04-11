@@ -15,12 +15,14 @@ const CIRCUIT_BREAKER_OPTIONS = {
 };
 
 export function createServiceMiddleware(serviceBaseUrl) {
-    async function circuitBreakerLogic(path, config) {
+    function circuitBreakerLogic(path, config) {
         const targetUrl = new URL(path, serviceBaseUrl)
+        // console.log(targetUrl)
+        // console.log(config);
         const response = await fetch(targetUrl,
             config
         );
-
+        console.log(response.text());
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response;
     }
@@ -46,7 +48,7 @@ export function createServiceMiddleware(serviceBaseUrl) {
 
         try {
             const data = await breaker.fire(req.originalUrl, config)
-            res.json(data);
+            res.json(data).send();
         } catch (error) {
             if (breaker.opened) {
                 console.log(error);
