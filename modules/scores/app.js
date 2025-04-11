@@ -103,7 +103,7 @@ async function main() {
             ack();
             return;
         }
-        const scoresList = await scores.getScores(competition_id);
+        const scoresList = await scores.getScoresForCompetition(competition_id);
         if (!scoresList) {
             console.error(`No scores found for competition with ID ${competition_id}`);
             ack();
