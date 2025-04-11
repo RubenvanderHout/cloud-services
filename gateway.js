@@ -17,16 +17,16 @@ app.use(express.json());
 
 const isAuthencitated = createAuthenicationMiddleware(authEndpointURL);
 
-const authServiceMiddleware = createServiceMiddleware(authsUrl);
-const scoresServiceMiddleware = createServiceMiddleware(scoresUrl);
-const targetsServiceMiddleware = createServiceMiddleware(targetsUrl);
+const authServiceMiddleware = createServiceMiddleware(authsUrl, "/api/auth/");
+const scoresServiceMiddleware = createServiceMiddleware(scoresUrl, "/api/scores/");
+const targetsServiceMiddleware = createServiceMiddleware(targetsUrl, "/api/targets/");
 
-app.all('/api/auth/*', authServiceMiddleware);
-app.all('/api/scores/*', isAuthencitated, scoresServiceMiddleware);
-app.all('/api/targets/*', isAuthencitated, targetsServiceMiddleware);
+app.all('/api/auth/*path', authServiceMiddleware);
+app.all('/api/scores/*path', isAuthencitated, scoresServiceMiddleware);
+app.all('/api/targets/*path', isAuthencitated, targetsServiceMiddleware);
 
 // Health check endpoint
-app.get("/health", (_req, res) => {
+app.get("/api/health", (_req, res) => {
     res.status(200).json({
         status: "OK",
         circuitState: breaker.stats,

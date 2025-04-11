@@ -14,9 +14,15 @@ const CIRCUIT_BREAKER_OPTIONS = {
     resetTimeout: resetTimeout,
 };
 
-export function createServiceMiddleware(serviceUrl) {
+export function createServiceMiddleware(serviceBaseUrl, servicePrefix) {
     async function circuitBreakerLogic(path, config) {
-        const response = await fetch(`${serviceUrl}${path}`, {
+        // Remove the service prefix (e.g., "/api/auth") from the incoming path
+        const targetPath = path.replace(servicePrefix, "");
+        // Add /api back
+        const realPath = "/api/" + targetPath;
+        const targetUrl = new URL(realPath, serviceBaseUrl).toString();
+
+        const response = await fetch(targetUrl, {
             method: config.method,
             headers: config.headers,
             body: JSON.stringify(config.body),
