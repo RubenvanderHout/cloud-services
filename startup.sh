@@ -40,5 +40,14 @@ for module in "${MODULES[@]}"; do
     start_module "$module"
 done
 
+echo "Starting up the gateway"
+if [ -f "package.json" ]; then
+    npm install
+    npm start &  # Run in background
+    pids+=($!)   # Save the PID
+else
+    echo "No package.json found for gateway. Skipping..."
+fi
+
 echo "All modules started. Press Ctrl+C to stop all services."
 wait  # Keep the script running until receiving a signal
