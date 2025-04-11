@@ -121,6 +121,16 @@ async function createTargetRepo(database, mongoConnection) {
         return await targetCollection.find({ city });
     }
 
+    async function getTargetPictureUrl(target_id) {
+        const target = await getTarget(target_id)
+
+        if (target === null) {
+            throw new Error("No target found");
+        }
+
+        return target.picture_url;
+    }
+
     async function getAll(){
         return await targetCollection.find();
     }
@@ -161,6 +171,7 @@ async function createTargetRepo(database, mongoConnection) {
         createTarget,
         getTarget,
         getAll,
+        getTargetPictureUrl,
         validateFileHashIsUnique,
         targetExists,
         getTargetWithCity,
