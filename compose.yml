@@ -3,7 +3,7 @@ include:
   - modules/auth/compose.yml
   - modules/email/compose.yml
   - modules/scores/compose.yml
-  - modules/target/compose.yml
+  - modules/targets/compose.yml
 
 services:
   rabbitmq:
