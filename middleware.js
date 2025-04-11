@@ -14,19 +14,15 @@ const CIRCUIT_BREAKER_OPTIONS = {
     resetTimeout: resetTimeout,
 };
 
-export function createServiceMiddleware(serviceBaseUrl, servicePrefix) {
+export function createServiceMiddleware(serviceBaseUrl) {
     async function circuitBreakerLogic(path, config) {
-        const targetPath = servicePrefix + path;
-        const targetUrl = new URL(targetPath, serviceBaseUrl).toString();
-
-        const response = await fetch(targetUrl, {
-            method: config.method,
-            headers: config.headers,
-            body: JSON.stringify(config.body),
-        });
+        const targetUrl = new URL(path, serviceBaseUrl)
+        const response = await fetch(targetUrl,
+            config
+        );
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
+        return response;
     }
 
     const breaker = new CircuitBreaker(
@@ -45,17 +41,17 @@ export function createServiceMiddleware(serviceBaseUrl, servicePrefix) {
         const config = {
             method: req.method,
             headers: req.headers,
-            body: req.body,
+            body: JSON.stringify(req.body),
         };
 
         try {
-            const data = await breaker.fire(req.params[0], config)
+            const data = await breaker.fire(req.originalUrl, config)
             res.json(data);
         } catch (error) {
             if (breaker.opened) {
+                console.log(error);
                 return res.status(503).json({
                     error: "Service Unavailable",
-                    service: serviceUrl,
                 });
             } else {
                 next(error);

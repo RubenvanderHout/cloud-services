@@ -54,7 +54,7 @@ async function main() {
     const userRepository = createUserRepository(pool);
 
     const amqpconn = await createAmqpConnection(amqpConfig);
-    const sendEmailQueue = amqpconn.createProducer(queues.sendEmailQueue);
+    const sendEmailQueue = await amqpconn.createProducer(queues.sendEmailQueue);
 
     app.put('/api/auth/authenticateToken', async (req, res) => {
         const token = req.body.authorization;
@@ -67,6 +67,8 @@ async function main() {
     });
 
     app.post('/api/auth/register/:username', async (req, res) => {
+
+        console.log(req.params.username);
 
         if (req.params.username === null || typeof req.params.username !== "string") {
             return res.status(400).send('Username not correct');
@@ -82,10 +84,13 @@ async function main() {
 
         try {
             const pass = await bcrypt.hash(req.body.password, 10);
+
+            console.log({ username: req.params.username, email: req.body.email, password: pass })
+
             const user = { username: req.params.username, email: req.body.email, password: pass };
-            userRepository.saveUser(user);
-            sendEmailQueue.send({ username: user.username, email: user.email });
-            res.status(201).send('User registered successfully');
+            await userRepository.saveUser(user);
+            await sendEmailQueue.send({ username: user.username, email: user.email });
+            res.status(201).send();
         } catch (err) {
             console.error(err)
             res.status(500).send("Internal Server Error");
@@ -103,13 +108,13 @@ async function main() {
         }
 
         try {
-            const user = userRepository.findUser(req.params.username);
+            const user = await userRepository.findUser(req.params.username);
 
             if (user === null) {
                 return res.sendStatus(404);
             }
-
-            if (await bcrypt.compare(req.body.password, user.password)) {
+            const result = await bcrypt.compare(req.body.password, user.password)
+            if (result) {
                 const rights = { username: user.username, email: user.email };
                 const accessToken = jwt.sign(rights, JWT_SECRET_KEY);
                 res.json({ token: accessToken });

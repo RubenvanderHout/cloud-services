@@ -19,8 +19,7 @@ async function doMigration(pool) {
     CREATE TABLE IF NOT EXISTS users (
         username varchar(250) PRIMARY KEY NOT NULL,
         email varchar(250) NOT NULL,
-        password varchar(250) NOT NULL,
-        confirmed TINYINT
+        password varchar(250) NOT NULL
     )`);
 }
 
@@ -40,15 +39,15 @@ async function updateUserConfirmed(pool, username) {
 
 async function saveUser(pool, user) {
     await pool.execute(
-        `INSERT IGNORE INTO users (username, email, password, confirmed)
-         VALUES (?, ?, ?, ?)`,
-        [user.username, user.email, user.password, user.confirmed]
+        `INSERT IGNORE INTO users (username, email, password)
+         VALUES (?, ?, ?)`,
+        [user.username, user.email, user.password]
     );
 }
 
 async function findUser(pool, username) {
     const [rows] = await pool.execute(
-        `SELECT username, email, password, confirmed FROM users WHERE username = ?`,
+        `SELECT username, email, password FROM users WHERE username = ?`,
         [username]
     );
 

@@ -81,14 +81,10 @@ async function createQueueProducer(createChannelFn, close, queueConfig) {
 
     await channel.assertQueue(queueConfig.name, queueConfig.options);
 
+
     async function sendMessageToQueue(message, options = {}){
         try {
             let messageReturned = false;
-            const handleReturn = () => {
-                messageReturned = true;
-            };
-            channel.on('return', handleReturn);
-
 
             const serializedMessage = JSON.stringify(message);
             const messageBuffer = Buffer.from(serializedMessage);
@@ -136,8 +132,6 @@ async function createQueueProducer(createChannelFn, close, queueConfig) {
                     timestamp: new Date().toISOString()
                 }
             };
-        } finally {
-            channel.removeListener('return', handleReturn);
         }
     }
 

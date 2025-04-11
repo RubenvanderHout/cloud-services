@@ -19,14 +19,14 @@ const app = express();
 app.use(express.json());
 
 
-const swaggerSpec = generateSwaggerSpec(`http://${host}:${port}`);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// const swaggerSpec = generateSwaggerSpec(`http://${host}:${port}`);
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const isAuthencitated = createAuthenicationMiddleware(authEndpointURL);
 
-const authServiceMiddleware = createServiceMiddleware(authsUrl, "/api/auth/");
-const scoresServiceMiddleware = createServiceMiddleware(scoresUrl, "/api/scores/");
-const targetsServiceMiddleware = createServiceMiddleware(targetsUrl, "/api/targets/");
+const authServiceMiddleware = createServiceMiddleware(authsUrl);
+const scoresServiceMiddleware = createServiceMiddleware(scoresUrl);
+const targetsServiceMiddleware = createServiceMiddleware(targetsUrl);
 
 app.all(['/api/auth/', '/api/auth/*path'], authServiceMiddleware);
 app.all(['/api/scores/', '/api/scores/*path'], isAuthencitated, scoresServiceMiddleware);
