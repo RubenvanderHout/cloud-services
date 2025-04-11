@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { URL, URLSearchParams } = require('url');
+const { URL } = require('url');
 const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
@@ -8,6 +8,8 @@ const CATEGORYID = "personal_photos";
 const REQUIRED_ENV_VARS = [
     "API_KEY",
     "API_SECRET",
+    "QUEUE_PHOTO_UPLOADED",
+    "QUEUE_PHOTO_SCORED",
 ];
 
 function parseEnvVariables(requiredVars) {
@@ -23,17 +25,20 @@ function parseEnvVariables(requiredVars) {
 
 const API_KEY =  process.env.API_KEY;
 const API_SECRET = process.env.API_SECRET;
+const receivedPhotoQueue = process.env.QUEUE_PHOTO_UPLOADED;
+const sendScoreSubmissionQueue = process.env.QUEUE_PHOTO_SCORED;
+
 const amqpConfig = {
     url: 'amqp://localhost',
     reconnectDelay: 3000
 };
 
 const queues = {
-    receivedComparedImageQueue: {
-        name: 'receivedComparedImageQueue',
+    receivedPhotoQueue: {
+        name: receivedPhotoQueue,
     },
-    sendComparedImageQueue: {
-        name: 'sendComparedImageQueue',
+    sendScoreSubmissionQueue: {
+        name:  sendScoreSubmissionQueue,
     },
 };
 
@@ -43,9 +48,9 @@ function main() {
 
     const amqpconn = createAmqpConnection(amqpConfig);
 
-    const sendComparedImageQueue = amqpconn.createProducer(queues.sendComparedImageQueue);
+    const sendComparedImageQueue = amqpconn.createProducer(queues.sendScoreSubmissionQueue);
 
-    amqpconn.createConsumer(queues.receivedComparedImageQueue, async ({ content, ack }) => {
+    amqpconn.createConsumer(queues.receivedPhotoQueue, async ({ content, ack }) => {
         const { competition_id, submission_time, target_image_url, submission_image_url, user_email } = content.body;
 
         const distance = await compareImages(target_image_url, submission_image_url);
