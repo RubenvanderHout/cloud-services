@@ -68,8 +68,6 @@ async function main() {
 
     app.post('/api/auth/register/:username', async (req, res) => {
 
-        console.log(req.params.username);
-
         if (req.params.username === null || typeof req.params.username !== "string") {
             return res.status(400).send('Username not correct');
         }
@@ -98,8 +96,7 @@ async function main() {
     });
 
     app.post('/api/auth/login/:username', async (req, res) => {
-
-        console.log(req);
+        res.status(400).send('Password not correct');
 
         if (req.params.username === null || typeof req.params.username !== "string") {
             return res.status(400).send('Username not correct');

@@ -15,16 +15,15 @@ const CIRCUIT_BREAKER_OPTIONS = {
 };
 
 export function createServiceMiddleware(serviceBaseUrl) {
-    function circuitBreakerLogic(path, config) {
+    async function circuitBreakerLogic(path, config) {
         const targetUrl = new URL(path, serviceBaseUrl)
-        // console.log(targetUrl)
-        // console.log(config);
         const response = await fetch(targetUrl,
             config
         );
-        console.log(response.text());
+        const json = await response.json();
+
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response;
+        return json;
     }
 
     const breaker = new CircuitBreaker(
@@ -39,7 +38,7 @@ export function createServiceMiddleware(serviceBaseUrl) {
         console.log(`Circuit breaker FAILURE for: ${serviceBaseUrl} ERROR: ${error.message}`)
     );
 
-    async function callback(req, res, next) {
+    function callback(req, res, next) {
         const config = {
             method: req.method,
             headers: req.headers,
@@ -47,9 +46,13 @@ export function createServiceMiddleware(serviceBaseUrl) {
         };
 
         try {
-            const data = await breaker.fire(req.originalUrl, config)
-            res.json(data).send();
+            breaker.fire(req.originalUrl, config)
+                .then((value) => res.json("done").send())
+                .catch((reason) => console.log("problem"));
         } catch (error) {
+
+            console.log("Catchhhhh")
+
             if (breaker.opened) {
                 console.log(error);
                 return res.status(503).json({
@@ -73,7 +76,7 @@ export function createAuthenicationMiddleware(authServiceUrl) {
         });
 
         if (!response.ok) throw new Error('Invalid token');
-        return response.json();
+        return await response.json();
     }
 
     const breaker = new CircuitBreaker(
