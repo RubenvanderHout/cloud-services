@@ -12,7 +12,6 @@ const CIRCUIT_BREAKER_OPTIONS = {
     timeout: timeout,
     errorThresholdPercentage: errorThresholdPercentage,
     resetTimeout: resetTimeout,
-    rollingCountTimeout: rollingCountTimeout,
 };
 
 export function createServiceMiddleware(serviceUrl) {
