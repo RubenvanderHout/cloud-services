@@ -1,0 +1,10 @@
+services:
+  mongo:
+    image: mongo
+    restart: always
+    ports:
+      - 27018:27017
+    container_name: targetsDB
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: targets
+      MONGO_INITDB_ROOT_PASSWORD: targets
