@@ -19,8 +19,8 @@ const app = express();
 app.use(express.json());
 
 
-// const swaggerSpec = generateSwaggerSpec(`http://${host}:${port}`);
-// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerSpec = generateSwaggerSpec(`http://${host}:${port}`);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 const isAuthencitated = createAuthenicationMiddleware(authEndpointURL);
 
@@ -39,11 +39,10 @@ app.get("/api/health", (_req, res) => {
     });
 });
 
-app.use((err, _req, res, _next) => {
-    console.log(err);
+app.use((error, _req, res, _next) => {
+    console.error('Global error handler:', error);
     res.status(500).json({ error: 'Internal server error' });
 });
-
 app.listen(port, host, () => {
     console.log(`Proxy server running on port ${port}`);
     console.log(`Auth service: ${authsUrl}`);

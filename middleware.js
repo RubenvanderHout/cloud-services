@@ -8,100 +8,164 @@ const errorThresholdPercentage =
     process.env.CIRCUIT_BREAKER_ERROR_THRESHOLD_PERCENTAGE;
 const resetTimeout = process.env.CIRCUIT_BREAKER_RESET_TIMEOUT;
 
-const CIRCUIT_BREAKER_OPTIONS = {
+const DEFAULT_CIRCUIT_BREAKER_OPTIONS = {
     timeout: timeout,
     errorThresholdPercentage: errorThresholdPercentage,
     resetTimeout: resetTimeout,
 };
 
-export function createServiceMiddleware(serviceBaseUrl) {
-    async function circuitBreakerLogic(path, config) {
-        const targetUrl = new URL(path, serviceBaseUrl)
-        const response = await fetch(targetUrl,
-            config
-        );
-        const json = await response.json();
+export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS = {}) {
+    const handler = async (req) => {
+        try {
+            const targetUrl = new URL(req.originalUrl, serviceBaseUrl);
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return json;
+            const config = {
+                method: req.method,
+                headers: { ...req.headers, host: undefined }, // Remove host header
+                body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined
+            };
+
+            const response = await fetch(targetUrl, config);
+
+            if (!response.ok) {
+                const error = new Error(`HTTP ${response.status}`);
+                error.status = response.status;
+                throw error;
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+
+            return {
+                status: response.status,
+                data: isJson ? await response.json() : await response.text(),
+            };
+        } catch (error) {
+            error.serviceUrl = serviceBaseUrl;
+            throw error;
+        }
     }
 
     const breaker = new CircuitBreaker(
-        circuitBreakerLogic,
-        CIRCUIT_BREAKER_OPTIONS
+        handler,
+        {
+            DEFAULT_CIRCUIT_BREAKER_OPTIONS,
+            ...CIRCUIT_BREAKER_OPTIONS
+        }
     );
 
     breaker.on('open', () => console.log(`Circuit OPEN for ${serviceBaseUrl}`));
     breaker.on('close', () => console.log(`Circuit CLOSED for ${serviceBaseUrl}`));
     breaker.on('halfOpen', () => console.log(`Circuit HALF-OPEN for ${serviceBaseUrl}`));
-    breaker.on("failure", (error) =>
-        console.log(`Circuit breaker FAILURE for: ${serviceBaseUrl} ERROR: ${error.message}`)
+    breaker.on('failure', (error) =>
+        console.log(`Failure for ${serviceBaseUrl}:`, error.message)
     );
 
-    function callback(req, res, next) {
-        const config = {
-            method: req.method,
-            headers: req.headers,
-            body: JSON.stringify(req.body),
-        };
+    breaker.fallback(() => ({
+        error: 'Service unavailable',
+        status: 503
+    }));
 
+    return async function middleware(req, res, next) {
         try {
-            breaker.fire(req.originalUrl, config)
-                .then((value) => res.json("done").send())
-                .catch((reason) => console.log("problem"));
-        } catch (error) {
+            const result = await breaker.fire(req);
 
-            console.log("Catchhhhh")
-
-            if (breaker.opened) {
-                console.log(error);
-                return res.status(503).json({
-                    error: "Service Unavailable",
-                });
-            } else {
-                next(error);
+            res.status(result.status);
+            if (result.data !== undefined) {
+                return res.send(result.data);
             }
+            res.end();
+
+        } catch (error) {
+            if (error.code === 'ETIMEDOUT' || error.code === 'ECIRCUITOPEN') {
+                return res.status(503).json({
+                    error: 'Service temporarily unavailable',
+                    service: serviceBaseUrl
+                });
+            }
+
+            if (error.status) {
+                return res.status(error.status).json({
+                    error: error.message,
+                    service: serviceBaseUrl
+                });
+            }
+
+            // Unknown errors
+            next(error);
+        }
+    };
+}
+export function createAuthenicationMiddleware(authServiceUrl, CIRCUIT_BREAKER_OPTIONS = {}) {
+    const handler = async (token) => {
+        try {
+            const config = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            };
+
+            const response = await fetch(authServiceUrl, config);
+
+            if (!response.ok) {
+                const error = new Error(`HTTP ${response.status}`);
+                error.status = response.status;
+                throw error;
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+            const isJson = contentType.includes('application/json');
+
+            return {
+                status: response.status,
+                data: isJson ? await response.json() : await response.text(),
+            };
+        } catch (error) {
+            error.serviceUrl = serviceBaseUrl;
+            throw error;
         }
     }
 
-    return callback;
-}
-
-export function createAuthenicationMiddleware(authServiceUrl) {
-    async function circuitBreakerLogic(token) {
-        const response = await fetch(authServiceUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-        });
-
-        if (!response.ok) throw new Error('Invalid token');
-        return await response.json();
-    }
-
     const breaker = new CircuitBreaker(
-        circuitBreakerLogic,
-        CIRCUIT_BREAKER_OPTIONS
+        handler,
+        {
+            DEFAULT_CIRCUIT_BREAKER_OPTIONS,
+            ...CIRCUIT_BREAKER_OPTIONS
+        }
     );
 
-    async function callback(req, res, next){
+
+    return async function middleware(req, res, next) {
         try {
             // Split the word Bearer and the token itself
             const token = req.headers.authorization?.split(' ')[1];
             if (!token) return res.status(401).json({ error: 'Missing token' });
 
-            const userData = await breaker.fire(token);
+            const result = await breaker.fire(token);
 
-            // Attach user data to request
-            req.user = userData;
-            next();
-        } catch (error) {
-            if (breaker.opened) {
-                return res.status(503).json({ error: 'Auth service unavailable' });
+            res.status(result.status);
+            if (result.data !== undefined) {
+                return res.send(result.data);
             }
-            res.status(401).json({ error: 'Invalid token' });
-        }
-    }
+            res.end();
 
-    return callback;
+        } catch (error) {
+            if (error.code === 'ETIMEDOUT' || error.code === 'ECIRCUITOPEN') {
+                return res.status(503).json({
+                    error: 'AUTH Service temporarily unavailable',
+                    service: authServiceUrl
+                });
+            }
+
+            if (error.status) {
+                return res.status(error.status).json({
+                    error: error.message,
+                    service: authServiceUrl
+                });
+            }
+
+            // Unknown errors
+            next(error);
+        }
+    };
 }
