@@ -129,6 +129,45 @@ const swaggerOptions = {
                             example: 'Error message'
                         }
                     }
+                },
+                UserCredentials: {
+                    type: 'object',
+                    required: ['email', 'password'],
+                    properties: {
+                        email: {
+                            type: 'string',
+                            format: 'email',
+                            example: 'user@example.com'
+                        },
+                        password: {
+                            type: 'string',
+                            format: 'password',
+                            example: 'securePassword123!'
+                        }
+                    }
+                },
+                Token: {
+                    type: 'object',
+                    properties: {
+                        token: {
+                            type: 'string',
+                            description: 'JWT access token'
+                        }
+                    }
+                },
+                UserInfo: {
+                    type: 'object',
+                    properties: {
+                        username: {
+                            type: 'string',
+                            example: 'john_doe'
+                        },
+                        email: {
+                            type: 'string',
+                            format: 'email',
+                            example: 'user@example.com'
+                        }
+                    }
                 }
             },
             responses: {
@@ -144,6 +183,10 @@ const swaggerOptions = {
             }
         },
         tags: [
+            {
+                name: 'Authentication',
+                description: 'User authentication and authorization'
+            },
             {
                 name: 'Gateway',
                 description: 'Gateway health and status endpoints'
@@ -533,6 +576,205 @@ const paths = {
                                 items: {
                                     $ref: '#/components/schemas/Target'
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    '/api/auth/authenticateToken': {
+        put: {
+            tags: ['Authentication'],
+            summary: 'Validate JWT token',
+            description: 'Verify if a JWT token is valid and return user info if valid',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['authorization'],
+                            properties: {
+                                authorization: {
+                                    type: 'string',
+                                    description: 'JWT token to validate'
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: 'Token is valid',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/UserInfo'
+                            }
+                        }
+                    }
+                },
+                401: {
+                    description: 'No token provided',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                },
+                403: {
+                    description: 'Invalid or expired token',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    '/api/auth/register/{username}': {
+        post: {
+            tags: ['Authentication'],
+            summary: 'Register a new user',
+            description: 'Create a new user account with username, email and password',
+            parameters: [
+                {
+                    name: 'username',
+                    in: 'path',
+                    required: true,
+                    schema: {
+                        type: 'string'
+                    },
+                    description: 'Username for the new account'
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/UserCredentials'
+                        }
+                    }
+                }
+            },
+            responses: {
+                201: {
+                    description: 'User registered successfully'
+                },
+                400: {
+                    description: 'Invalid input data',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                },
+                500: {
+                    description: 'Internal server error',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    '/api/auth/login/{username}': {
+        post: {
+            tags: ['Authentication'],
+            summary: 'Login with username and password',
+            description: 'Authenticate user and return JWT token if credentials are valid',
+            parameters: [
+                {
+                    name: 'username',
+                    in: 'path',
+                    required: true,
+                    schema: {
+                        type: 'string'
+                    },
+                    description: 'Username to login with'
+                }
+            ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            type: 'object',
+                            required: ['password'],
+                            properties: {
+                                password: {
+                                    type: 'string',
+                                    format: 'password',
+                                    description: 'User password'
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: 'Login successful',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/Token'
+                            }
+                        }
+                    }
+                },
+                400: {
+                    description: 'Invalid input data',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                },
+                401: {
+                    description: 'Invalid credentials',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                },
+                404: {
+                    description: 'User not found',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
+                            }
+                        }
+                    }
+                },
+                500: {
+                    description: 'Internal server error',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/ErrorResponse'
                             }
                         }
                     }
