@@ -100,9 +100,9 @@ export function createAuthenicationMiddleware(authServiceUrl, CIRCUIT_BREAKER_OP
     const handler = async (token) => {
         try {
             const config = {
-                method: 'POST',
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token })
+                body: JSON.stringify({ authorization: token })
             };
 
             const response = await fetch(authServiceUrl, config);
@@ -121,7 +121,7 @@ export function createAuthenicationMiddleware(authServiceUrl, CIRCUIT_BREAKER_OP
                 data: isJson ? await response.json() : await response.text(),
             };
         } catch (error) {
-            error.serviceUrl = serviceBaseUrl;
+            error.serviceUrl = authServiceUrl;
             throw error;
         }
     }
@@ -133,22 +133,27 @@ export function createAuthenicationMiddleware(authServiceUrl, CIRCUIT_BREAKER_OP
             ...CIRCUIT_BREAKER_OPTIONS
         }
     );
+    breaker.on('open', () => console.log(`Circuit OPEN for ${authServiceUrl}`));
+    breaker.on('close', () => console.log(`Circuit CLOSED for ${authServiceUrl}`));
+    breaker.on('halfOpen', () => console.log(`Circuit HALF-OPEN for ${authServiceUrl}`));
+    breaker.on('failure', (error) =>
+        console.log(`Failure for ${authServiceUrl}:`, error.message)
+    );
 
+    breaker.fallback(() => ({
+        error: 'Service unavailable',
+        status: 503
+    }));
 
     return async function middleware(req, res, next) {
         try {
             // Split the word Bearer and the token itself
             const token = req.headers.authorization?.split(' ')[1];
             if (!token) return res.status(401).json({ error: 'Missing token' });
-
-            const result = await breaker.fire(token);
-
-            res.status(result.status);
-            if (result.data !== undefined) {
-                return res.send(result.data);
-            }
-            res.end();
-
+            const userData = await breaker.fire(token);
+            // Attach user data to request
+            req.user = userData;
+            next();
         } catch (error) {
             if (error.code === 'ETIMEDOUT' || error.code === 'ECIRCUITOPEN') {
                 return res.status(503).json({

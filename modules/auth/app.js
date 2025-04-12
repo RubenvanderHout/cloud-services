@@ -96,8 +96,6 @@ async function main() {
     });
 
     app.post('/api/auth/login/:username', async (req, res) => {
-        res.status(400).send('Password not correct');
-
         if (req.params.username === null || typeof req.params.username !== "string") {
             return res.status(400).send('Username not correct');
         }
