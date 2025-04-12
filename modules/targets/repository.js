@@ -92,77 +92,99 @@ async function createTargetRepo(database, mongoConnection) {
     }
 
     async function createTarget(target) {
-        // target should include: competition_id, city, user_email, picture_id, start_timestamp, end_timestamp, is_finished
-        const result = await targetCollection.insertOne(target);
-
-        return result;
+        try {
+            if (!target || typeof target !== 'object') {
+                throw new Error('Invalid target object');
+            }
+            const result = await targetCollection.insertOne(target);
+            return result;
+        } catch (error) {
+            throw new Error('Failed to create target');
+        }
     }
 
     async function getTarget(target_id) {
-        return await targetCollection.findOne({ target_id });
+        try {
+            if (!target_id) {
+                throw new Error('Missing target_id parameter');
+            }
+            return await targetCollection.findOne({ target_id });
+        } catch (error) {
+            throw new Error('Failed to retrieve target');
+        }
+    }
+
+    async function getAll() {
+        try {
+            return await targetCollection.find({}).toArray();
+        } catch (error) {
+            throw new Error('Failed to retrieve targets');
+        }
+    }
+
+    async function getTargetWithCity(city) {
+        try {
+            if (!city) {
+                throw new Error('Missing city parameter');
+            }
+            return await targetCollection.find({ city }).toArray();
+        } catch (error) {
+            console.error(`Error getting targets for city ${city}:`, error);
+            throw new Error('Failed to retrieve targets by city');
+        }
+    }
+
+    async function validateFileHashIsUnique(target_id, uploadedPictureHash) {
+        try {
+            const existing = await targetCollection.findOne({
+                picture_hash: uploadedPictureHash,
+                target_id: { $ne: target_id }
+            });
+            return !existing;
+        } catch (error) {
+            console.error('Error validating file hash uniqueness:', error);
+            throw new Error('Failed to validate file hash');
+        }
     }
 
     async function targetExists(target_id) {
         const target = await getTarget(target_id);
-        return !target;
+        return target !== null;
     }
 
     async function isFinished(target_id) {
-        const target = await targetCollection.findOne({ target_id });
-
-        if(target === null) {
-            return false;
-        }
-
-        return target ? target.is_finished === true : false;
-    }
-
-    async function getTargetWithCity(city) {
-        return await targetCollection.find({ city });
+        const target = await getTarget(target_id);
+        return target?.is_finished || false;
     }
 
     async function getTargetPictureUrl(target_id) {
-        const target = await getTarget(target_id)
-
-        if (target === null) {
-            throw new Error("No target found");
-        }
-
-        return target.picture_url;
-    }
-
-    async function getAll(){
-        return await targetCollection.find();
-    }
-
-    async function validateFileHashIsUnique(target_id, uploadedPictureHash) {
-        const target = await targetCollection.find({target_id});
-        return uploadedPictureHash !== target.picture_hash;
-    }
-
-    async function updateTarget(target_id, setFields = {}, unsetFields = []) {
-        const updateObj = {};
-        if (Object.keys(setFields).length) {
-            updateObj.$set = setFields;
-        }
-        if (unsetFields.length) {
-            updateObj.$unset = unsetFields.reduce((acc, field) => {
-                acc[field] = "";
-                return acc;
-            }, {});
-        }
-        return await targetCollection.updateOne({ target_id }, updateObj);
+        const target = await getTarget(target_id);
+        return target?.picture_url || null;
     }
 
     async function deleteTarget(target_id) {
-        return await targetCollection.deleteOne({ target_id });
+        try {
+            if (!target_id) {
+                throw new Error('Missing target_id parameter');
+            }
+            return await targetCollection.deleteOne({ target_id });
+        } catch (error) {
+            throw new Error('Failed to delete target');
+        }
     }
 
     async function setCompetitionFinished(target_id) {
-        return await targetCollection.updateOne(
-            { target_id },
-            { $set: { finished: true } }
-        );
+        try {
+            if (!target_id) {
+                throw new Error('Missing target_id parameter');
+            }
+            return await targetCollection.updateOne(
+                { target_id },
+                { $set: { is_finished: true } }
+            );
+        } catch (error) {
+            throw new Error('Failed to update target');
+        }
     }
 
     await constructor();
@@ -176,7 +198,6 @@ async function createTargetRepo(database, mongoConnection) {
         targetExists,
         getTargetWithCity,
         isFinished,
-        updateTarget,
         deleteTarget,
         setCompetitionFinished,
     };
@@ -191,42 +212,61 @@ async function createSubmissionRepo(database, mongoConnection) {
     }
 
     async function createSubmission(submission) {
-        // submission should include: competition_id : uuid, user_email, picture_id, submit_timestamp
-        const result = await submissionCollection.insertOne(submission);
-        return result;
+        try {
+            if (!submission || typeof submission !== 'object') {
+                throw new Error('Invalid submission object');
+            }
+            const result = await submissionCollection.insertOne(submission);
+            return result;
+        } catch (error) {
+            console.error('Error creating submission:', error);
+            throw new Error('Failed to create submission');
+        }
     }
 
     async function getSubmission(filter = {}) {
-        return await submissionCollection.findOne(filter);
-    }
-
-    async function updateSubmission(competition_id, user_email, setFields = {}, unsetFields = []) {
-        const updateObj = {};
-        if (Object.keys(setFields).length) {
-            updateObj.$set = setFields;
+        try {
+            if (!filter || typeof filter !== 'object') {
+                throw new Error('Invalid filter parameter');
+            }
+            return await submissionCollection.findOne(filter);
+        } catch (error) {
+            console.error('Error getting submission:', error);
+            throw new Error('Failed to retrieve submission');
         }
-        if (unsetFields.length) {
-            updateObj.$unset = unsetFields.reduce((acc, field) => {
-                acc[field] = "";
-                return acc;
-            }, {});
-        }
-        // Using competition_id and user_email as identifiers
-        return await submissionCollection.updateOne(
-            { competition_id, user_email },
-            updateObj
-        );
     }
 
     async function deleteSubmission(competition_id, user_email) {
-        return await submissionCollection.deleteOne({ competition_id, user_email });
+        try {
+            if (!competition_id) {
+                throw new Error('Missing competition_id parameter');
+            }
+            if (!user_email) {
+                throw new Error('Missing user_email parameter');
+            }
+
+            await submissionCollection.deleteOne({ competition_id, user_email });
+        } catch (error) {
+            console.error(`Error marking competition ${competition_id} as finished:`, error);
+            throw new Error('Failed to delete submission');
+        }
     }
 
+
     async function setCompetitionFinished(competition_id) {
-        return await submissionCollection.updateMany(
-            { competition_id },
-            { $set: { finished: true } }
-        );
+        try {
+            if (!competition_id) {
+                throw new Error('Missing competition_id parameter');
+            }
+            const result = await submissionCollection.updateMany(
+                { competition_id },
+                { $set: { is_finished: true } }
+            );
+            return result;
+        } catch (error) {
+            console.error(`Error marking competition ${competition_id} as finished:`, error);
+            throw new Error('Failed to update competition status');
+        }
     }
 
     await constructor();
@@ -234,7 +274,6 @@ async function createSubmissionRepo(database, mongoConnection) {
     return {
         createSubmission,
         getSubmission,
-        updateSubmission,
         deleteSubmission,
         setCompetitionFinished,
     };
