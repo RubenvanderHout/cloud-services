@@ -178,6 +178,8 @@ async function main() {
 
         const { file, filename, competition_id } = req.formData;
 
+        const targetExists = await targetRepo.targetExists(competition_id);
+
         if (!targetExists){
             return res.status(404).send("Given competition doesn't exist");
         }
