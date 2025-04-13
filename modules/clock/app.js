@@ -84,6 +84,7 @@ async function main() {
     }
 
     async function restartRunningTimers() {
+        console.log("Restarting running timers...");
         getRunningTimers(timerRepository)
         .then((timers) => {
             timers.forEach(timer => {
