@@ -29,7 +29,7 @@ const receivedPhotoQueue = process.env.QUEUE_PHOTO_UPLOADED;
 const sendScoreSubmissionQueue = process.env.QUEUE_PHOTO_SCORED;
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    url: process.env.AMQP_HOST,
     reconnectDelay: 3000
 };
 

@@ -34,7 +34,7 @@ const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const sendEmailQueue = process.env.QUEUE_SEND_MAIL_AUTH_EMAIL;
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    url: process.env.AMQP_HOST,
     reconnectDelay: 3000
 };
 

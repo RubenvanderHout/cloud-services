@@ -13,7 +13,7 @@ const QUEUE_ENDSCORE_REQUEST = process.env.QUEUE_ENDSCORE_REQUEST_SCORE_EMAIL;
 
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    url: process.env.AMQP_HOST,
     reconnectDelay: 3000
 };
 

@@ -46,7 +46,7 @@ const competetionCreated = process.env.QUEUE_COMPETITION_CREATED_TARGET_SCORE;
 const photoDeleted = process.env.QUEUE_PHOTO_DELETED_TARGET_SCORE;
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    url: process.env.AMQP_HOST,
     reconnectDelay: 3000
 };
 

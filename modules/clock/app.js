@@ -4,7 +4,7 @@ const createAmqpConnection = AmqpModule.createAmqpConnection;
 const { storeTimerToDB, connectToMongoDB } = require("./repository.js");
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    url: process.env.AMQP_HOST,
     reconnectDelay: 3000
 };
 const queues = {

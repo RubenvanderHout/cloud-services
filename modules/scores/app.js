@@ -39,7 +39,7 @@ const receivedSubmissionQueue = process.env.QUEUE_RECEIVE_SUBMISSION_IMAGE_SCORE
 const receivedSubmissionDeletedQueue = process.env.QUEUE_RECEIVE_SUBMISSION_DELETED_TARGET_SCORE;
 
 const amqpConfig = {
-    url: 'amqp://localhost',
+    url: process.env.AMQP_HOST,
     reconnectDelay: 3000
 };
 
