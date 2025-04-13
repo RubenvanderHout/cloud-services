@@ -3,26 +3,28 @@ const { URL } = require('url');
 const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
-const CATEGORYID = "personal_photos";
 
 const REQUIRED_ENV_VARS = [
     "API_KEY",
     "API_SECRET",
     "QUEUE_PHOTO_UPLOADED",
     "QUEUE_PHOTO_SCORED",
+    "AMQP_HOST",
+    "CATEGORYID",
 ];
 
 function parseEnvVariables(requiredVars) {
     const missing = requiredVars.filter(varName => !(varName in process.env));
-
+    
     if (missing.length > 0) {
         console.error('Missing environment variables:', missing.join(', '));
         // Handle missing variables (e.g., exit process)
         process.exit(1);
     }
 }
+parseEnvVariables(REQUIRED_ENV_VARS);
 
-
+const CATEGORYID = process.env.CATEGORYID;
 const API_KEY = process.env.API_KEY;
 const API_SECRET = process.env.API_SECRET;
 const receivedPhotoQueue = process.env.QUEUE_PHOTO_UPLOADED;
@@ -44,7 +46,7 @@ const queues = {
 
 
 async function main() {
-    parseEnvVariables(REQUIRED_ENV_VARS);
+    
 
     const amqpconn = await createAmqpConnection(amqpConfig);
 

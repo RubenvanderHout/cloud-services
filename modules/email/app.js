@@ -4,6 +4,26 @@ const nodemailer = require('nodemailer');
 const AmqpModule = require("./amqp");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
+const REQUIRED_ENV_VARS = [
+    "EMAIL_HOST",
+    "EMAIL_PORT",
+    "QUEUE_CONFIRMATION_REQUEST_AUTH_EMAIL",
+    "QUEUE_ENDSCORE_REQUEST_SCORE_EMAIL",
+    "AMQP_HOST",
+];
+
+function parseEnvVariables(requiredVars) {
+    const missing = requiredVars.filter(varName => !(varName in process.env));
+
+    if (missing.length > 0) {
+        console.error('Missing environment variables:', missing.join(', '));
+        // Handle missing variables (e.g., exit process)
+        process.exit(1);
+    }
+}
+
+parseEnvVariables(REQUIRED_ENV_VARS);
+
 
 const EMAIL_HOST = process.env.EMAIL_HOST
 const EMAIL_PORT = process.env.EMAIL_PORT
