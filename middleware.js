@@ -21,8 +21,8 @@ export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS 
 
             const config = {
                 method: req.method,
-                headers: { ...req.headers, host: undefined }, // Remove host header
-                body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined
+                headers: { ...req.headers, host: undefined, 'x-user': JSON.stringify(req.user.data) }, // Remove host header
+                body: req.method === 'GET' || req.method === 'HEAD' ? undefined : req,
             };
 
             const response = await fetch(targetUrl, config);

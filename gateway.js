@@ -16,8 +16,6 @@ const authEndpoint = process.env.ENDPOINT_AUTHENTICATE;
 const authEndpointURL = authsUrl + authEndpoint;
 
 const app = express();
-app.use(express.json());
-
 
 const swaggerSpec = generateSwaggerSpec(`http://${host}:${port}`);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
