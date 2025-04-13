@@ -21,7 +21,7 @@ export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS 
 
             let headers = { ...req.headers, host: undefined, };
 
-            if(req.user.data) {
+            if(req?.user?.data) {
                 headers = {
                     ...headers,
                     'x-user': JSON.stringify(req.user.data)
