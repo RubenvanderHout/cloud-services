@@ -96,13 +96,16 @@ async function main() {
 
         const { endtime, starttime } = competition;
         const score = calculateScore(endtime, starttime, submission_time, distance);
-        await scores.addScore(competition_id, user_email, score);
+        console.info(`Calculated score for user ${user_email} in competition ${competition_id}: ${score}`);
+        await scores.addScore(user_email, competition_id, score);
         ack();
     });
 
 
     amqpconn.createConsumer(queues.receivedRegistrationEndedQueue, async ({ content, ack }) => {
         const { competition_id } = content;
+        console.info(`Received registration ended event for competition: ${competition_id}`);
+
         const competition = await scores.getCompetition(competition_id);
         if (!competition) {
             console.error(`Competition with ID ${competition_id} not found`);

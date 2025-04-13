@@ -64,12 +64,12 @@ async function getCompetition(pool, competition_id) {
   return rows[0];
 }
 
-async function addScore(pool, user_email, competition_id, pictureId, score) {
+async function addScore(pool, user_email, competition_id, score) {
   await pool.execute(
-    `INSERT INTO scores (user_email, competition_id, picture_id, score)
-       VALUES (?, ?, ?, ?)
+    `INSERT INTO scores (user_email, competition_id, score)
+       VALUES (?, ?, ?)
        ON DUPLICATE KEY UPDATE score = VALUES(score)`,
-    [user_email, competition_id, pictureId, score]
+    [user_email, competition_id, score]
   );
 }
 
