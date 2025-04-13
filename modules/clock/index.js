@@ -42,10 +42,10 @@ async function main(){
 
 
     function startTimer(content) {
-        const timerDuration = content.body.endTimeStamp - content.body.startTimeStamp;
+        const timerDuration = content.endTimeStamp - content.startTimeStamp;
 
         setTimeout(async () => {
-            const { competition_id } = content.body;
+            const { competition_id } = content;
 
             if (timer) {
                 Promise.all([
@@ -68,7 +68,7 @@ async function main(){
     
     
     async function storeTimer(content){
-        const { startTimeStamp, endTimeStamp, competition_id } = content.body;
+        const { startTimeStamp, endTimeStamp, competition_id } = content;
     
         
         const timer = {

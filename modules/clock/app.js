@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config();app.del
 const AmqpModule = require("./amqp.js");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 const { storeTimerToDB, connectToMongoDB } = require("./repository.js");
@@ -44,10 +44,10 @@ async function main(){
 
 
     function startTimer(content) {
-        const timerDuration = content.body.end_timestamp - content.body.start_timestamp;
+        const timerDuration = content.end_timestamp - content.start_timestamp;
 
         setTimeout(async () => {
-            const { competition_id } = content.body;
+            const { competition_id } = content;
 
             if (timer) {
                 Promise.all([
@@ -70,7 +70,7 @@ async function main(){
 
 
     async function storeTimer(content){
-        const { start_timestamp, end_timestamp, competition_id } = content.body;
+        const { start_timestamp, end_timestamp, competition_id } = content;
 
 
         const timer = {
