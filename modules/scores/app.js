@@ -131,7 +131,7 @@ async function main() {
 
     app.get('/api/scores/:competition_id', async (req, res) => {
         const competition_id = req.params.competition_id;
-        const scoresList = await scores.getScores(competition_id);
+        const scoresList = await scores.getScoresForCompetition(competition_id);
 
         if (!scoresList) {
             return res.status(404).json({ message: 'Competition not found' });
