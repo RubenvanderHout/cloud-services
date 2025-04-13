@@ -38,7 +38,7 @@ async function main() {
     amqpconn.createConsumer(queues.confirmationRequest, async ({ content, ack, nack }) => {
 
         try {
-            const user = content.user;
+            const email = await content.email;
 
             const html = `
                 <!DOCTYPE html>
@@ -55,7 +55,7 @@ async function main() {
 
             const info = await transporter.sendMail({
                 from: '"Photo prestiges" <photos@example.com>',
-                to: user.email,
+                to: email,
                 subject: "Succesfully signed up!",
                 html: html,
             });
