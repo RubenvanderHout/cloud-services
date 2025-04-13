@@ -169,17 +169,15 @@ async function main() {
 main();
 
 function calculateMaxScore(endtime, starttime) {
-    const maxTime = endtime - starttime; // highest possible score for time
-    const maxDistance = 100; // highest possible score for distance
-    const maxScore = maxDistance + maxTime; // highest possible score
-    return maxScore;
+    return endtime - starttime; 
 }
 
 function calculateScore(endtime, startTime, submission_time, distance) {
     const timeScore = endtime - submission_time; // time score
-    const distanceScore = 100 - distance; // distance score
+    let distanceScore = Math.round(distance*100); // distance score, used as penalty
 
     // actual score is a percentage of the max score
-    const score = ((timeScore + distanceScore) / calculateMaxScore(endtime, startTime)) * 100; // percentage of max score
+    const score = ((timeScore - distanceScore) / calculateMaxScore(endtime, startTime)) * 100; // percentage of max score
+
     return score;
 }

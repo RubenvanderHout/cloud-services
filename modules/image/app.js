@@ -51,9 +51,10 @@ async function main() {
     const sendComparedImageQueue = await amqpconn.createProducer(queues.sendScoreSubmissionQueue);
 
     amqpconn.createConsumer(queues.receivedPhotoQueue, async ({ content, ack }) => {
-        const { competition_id, submission_time, target_image_url, submission_image_url, user_email } = content.body;
+        const { competition_id, submission_time, target_image_url, submission_image_url, user_email } = content;
 
         const distance = await compareImages(target_image_url, submission_image_url);
+        
 
         sendComparedImageQueue.send({
             body: {
