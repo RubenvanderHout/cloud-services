@@ -74,7 +74,13 @@ async function main() {
     const sendEndScoresQueue = amqpconn.createProducer(queues.sendEndScoresQueue);
 
     amqpconn.createConsumer(queues.receivedCompetitionCreatedQueue, async ({ content, ack }) => {
-        scores.createCompetition(content);
+        const { competition_id, start_timestamp, end_timestamp } = await content;
+        console.info(`Received competition created event: ${competition_id}`);
+        console.info(`Competition start time: ${start_timestamp}`);   
+        console.info(`Competition end time: ${end_timestamp}`);
+
+        scores.createCompetition(competition_id, start_timestamp, end_timestamp);
+        console.info(`Competition ${competition_id} created in DB`);
         ack();
     });
 
@@ -90,7 +96,7 @@ async function main() {
 
         const { endtime, starttime } = competition;
         const score = calculateScore(endtime, starttime, submission_time, distance);
-        await scores.saveScore(competition_id, user_email, score);
+        await scores.addScore(competition_id, user_email, score);
         ack();
     });
 

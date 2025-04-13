@@ -19,6 +19,7 @@ export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS 
         try {
             const targetUrl = new URL(req.originalUrl, serviceBaseUrl);
 
+            console.log(`Proxying request to ${targetUrl}`);
             let headers = { ...req.headers, host: undefined, };
 
             if(req?.user?.data) {

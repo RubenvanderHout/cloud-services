@@ -26,9 +26,9 @@ const authServiceMiddleware = createServiceMiddleware(authsUrl);
 const scoresServiceMiddleware = createServiceMiddleware(scoresUrl);
 const targetsServiceMiddleware = createServiceMiddleware(targetsUrl);
 
-app.all(['/api/auth/', '/api/auth/*path'], authServiceMiddleware);
-app.all(['/api/scores/', '/api/scores/*path'], isAuthencitated, scoresServiceMiddleware);
-app.all(['/api/targets/', '/api/targets/*path'], isAuthencitated, targetsServiceMiddleware);
+app.all(['/api/auth/*path', '/api/auth/' ], authServiceMiddleware);
+app.all(['/api/scores/*path', '/api/scores/' ], isAuthencitated, scoresServiceMiddleware);
+app.all(['/api/targets/*path', '/api/targets/' ], isAuthencitated, targetsServiceMiddleware);
 
 // Health check endpoint
 app.get("/api/health", (_req, res) => {

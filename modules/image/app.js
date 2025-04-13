@@ -23,7 +23,7 @@ function parseEnvVariables(requiredVars) {
 }
 
 
-const API_KEY =  process.env.API_KEY;
+const API_KEY = process.env.API_KEY;
 const API_SECRET = process.env.API_SECRET;
 const receivedPhotoQueue = process.env.QUEUE_PHOTO_UPLOADED;
 const sendScoreSubmissionQueue = process.env.QUEUE_PHOTO_SCORED;
@@ -38,7 +38,7 @@ const queues = {
         name: receivedPhotoQueue,
     },
     sendScoreSubmissionQueue: {
-        name:  sendScoreSubmissionQueue,
+        name: sendScoreSubmissionQueue,
     },
 };
 
@@ -52,18 +52,22 @@ async function main() {
 
     amqpconn.createConsumer(queues.receivedPhotoQueue, async ({ content, ack }) => {
         const { competition_id, submission_time, target_image_url, submission_image_url, user_email } = content;
+        console.log("Received urls: ");
+        console.log("Target image URL: ", target_image_url);
+        console.log("Submission image URL: ", submission_image_url);
+
 
         const distance = await compareImages(target_image_url, submission_image_url);
-        
+        console.log("Distance: ", distance);
 
         sendComparedImageQueue.send({
-            body: {
-                competition_id: competition_id,
-                submission_time: submission_time,
-                distance: distance,
-                user_email: user_email
-            }
+            competition_id: competition_id,
+            submission_time: submission_time,
+            distance: distance,
+            user_email: user_email
+
         });
+
         ack();
     })
 }

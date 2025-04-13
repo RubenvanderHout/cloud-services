@@ -108,8 +108,8 @@ async function main() {
     const competetionCreatedQueue = await amqpconn.createProducer(queues.competetionCreated);
     const photoDeletedQueue = await amqpconn.createProducer(queues.photoDeleted);
 
-    amqpconn.createConsumer(queues.registrationEnded, (content, ack) => {
-        targetRepo.setCompetitionFinished(content.competition_id)
+    amqpconn.createConsumer(queues.registrationEnded, async ({content, ack}) => {
+        await targetRepo.setCompetitionFinished(content.competition_id)
         ack();
     })
 
@@ -165,8 +165,9 @@ async function main() {
 
         const scoresMessage = {
             competition_id: target.competition_id,
-            city: target.city,
             user_email: target.user_email,
+            start_timestamp: target.start_timestamp,
+            end_timestamp: target.end_timestamp,
         };
         await competetionCreatedQueue.send(scoresMessage);
 
@@ -174,9 +175,10 @@ async function main() {
     });
 
     // Add a picture to a competion
-    app.post('/api/targets/:competition_id', multipartParser, async (req, res) => {
+    app.post('/api/targets/submit/', multipartParser, async (req, res) => {
 
-        const { file, filename, competition_id } = req.formData;
+        const { file, competition_id } = req.formData;
+        const filename = file.info.filename
 
         const targetExists = await targetRepo.targetExists(competition_id);
 
@@ -219,9 +221,9 @@ async function main() {
 
         await uploadPhotoQueue.send(submission);
 
-        res.json(submission).send("Images added to competition");
+        res.json(submission);
     });
-
+    
     // Delete your picture from the competetion
     app.delete('/api/targets/:competition_id/:email', async (req, res) => {
 

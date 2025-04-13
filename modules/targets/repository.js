@@ -112,7 +112,7 @@ async function createTargetRepo(dbName, mongoConnection) {
             if (!target_id) {
                 throw new Error('Missing target_id parameter');
             }
-            return await targetCollection.findOne({ target_id });
+            return await targetCollection.findOne({ competition_id: target_id });
         } catch (error) {
             throw new Error('Failed to retrieve target');
         }

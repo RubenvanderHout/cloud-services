@@ -20,13 +20,13 @@ const queues = {
 };
 
 const REQUIRED_ENV_VARS = [
-    "MONGO_DB","MONGO_URI", "MONGO_USER", "MONGO_PASSWORD",
+    "MONGO_DB", "MONGO_URI", "MONGO_USER", "MONGO_PASSWORD",
     "QUEUE_COMPETITION_STARTED_TARGET_CLOCK",
     "QUEUE_REGISTRATION_ENDED_CLOCK_TARGET",
     "QUEUE_TIMER_ENDED_CLOCK_SCORE",
 ];
 
-async function main(){
+async function main() {
     parseEnvVariables(REQUIRED_ENV_VARS);
 
     const timerReceivedHandler = async ({ content, ack }) => {
@@ -38,8 +38,8 @@ async function main(){
     const timerRepository = await connectToMongoDB();
     const amqpconn = await createAmqpConnection(amqpConfig);
     amqpconn.createConsumer(queues.receivedTimerStartedQueue, timerReceivedHandler);
-    const sendTimerEndedQueue = amqpconn.createProducer(queues.sendTimerEndedQueue);
-    const sendRegistrationEndedQueue = amqpconn.createProducer(queues.sendRegistrationEndedQueue);
+    const sendTimerEndedQueue = await amqpconn.createProducer(queues.sendTimerEndedQueue);
+    const sendRegistrationEndedQueue = await amqpconn.createProducer(queues.sendRegistrationEndedQueue);
     console.log("Clock service is running...");
 
 
@@ -49,23 +49,22 @@ async function main(){
         setTimeout(async () => {
             const { competition_id } = content;
 
-            if (timer) {
-                Promise.all([
-                    sendTimerEndedQueue.send({
-                        competition_id: competition_id
-                    }),
-                    sendRegistrationEndedQueue.send({
-                        competition_id: competition_id
-                    })
-                ]);
-            }
+
+            Promise.all([
+                sendTimerEndedQueue.send({
+                    competition_id: competition_id
+                }),
+                sendRegistrationEndedQueue.send({
+                    competition_id: competition_id
+                })
+            ]);
         }
-        , timerDuration);
+            , timerDuration);
     }
 
 
 
-    async function storeTimer(content){
+    async function storeTimer(content) {
         const { start_timestamp, end_timestamp, competition_id } = content;
 
 

@@ -28,9 +28,8 @@ async function doMigration(pool) {
     CREATE TABLE IF NOT EXISTS scores (
       user_email VARCHAR(250) NOT NULL,
       competition_id VARCHAR(250) NOT NULL,
-      picture_id VARCHAR(250) NOT NULL,
       score INT NOT NULL,
-      PRIMARY KEY (user_email, competition_id, picture_id),
+      PRIMARY KEY (user_email, competition_id),
       FOREIGN KEY (competition_id) REFERENCES competitions(competition_id)
     )`);
 }
@@ -39,7 +38,7 @@ function createScoresRepository(pool) {
   return {
     createCompetition: (competition_id, starttime, endtime) => createCompetition(pool, competition_id, starttime, endtime),
     getCompetition: (competition_id) => getCompetition(pool, competition_id),
-    addScore: (user_email, competition_id, pictureId, score) => addScore(pool, user_email, competition_id, pictureId, score),
+    addScore: (user_email, competition_id, score) => addScore(pool, user_email, competition_id, score),
     getScoresForCompetition: (competition_id) => getScoresForCompetition(pool, competition_id),
     getUserScores: (competition_id, user_email ) => getUserScores(pool, competition_id, user_email ),
     deleteScore: (competition_id, user_email) => deleteScore(pool, competition_id, user_email),
@@ -47,6 +46,8 @@ function createScoresRepository(pool) {
 }
 
 async function createCompetition(pool, competition_id, starttime, endtime) {
+  console.log("Creating competition", competition_id, starttime, endtime);
+
   const [result] = await pool.execute(
     `INSERT INTO competitions (competition_id, starttime, endtime)
        VALUES (?, ?, ?)`,
