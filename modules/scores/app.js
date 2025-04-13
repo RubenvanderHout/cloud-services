@@ -106,25 +106,7 @@ async function main() {
         const { competition_id } = content;
         console.info(`Received registration ended event for competition: ${competition_id}`);
 
-        const competition = await scores.getCompetition(competition_id);
-        if (!competition) {
-            console.error(`Competition with ID ${competition_id} not found`);
-            ack();
-            return;
-        }
-        const scoresList = await scores.getScoresForCompetition(competition_id);
-        if (!scoresList) {
-            console.error(`No scores found for competition with ID ${competition_id}`);
-            ack();
-            return;
-        }
-
-        sendEndScoresQueue.send({
-            body: {
-                competition_id: competition_id,
-                scores_list: scoresList
-            }
-        });
+        await sendEndScores(competition_id);
 
         ack();
     });
@@ -160,6 +142,14 @@ async function main() {
 
         res.json(scoresList);
     });
+    
+    app.post('/api/scores/sendScores', async (req, res) => {
+        const { competition_id } = req.body;
+        console.info(`Received request to send scores for competition: ${competition_id}`);
+
+        await sendEndScores(competition_id);
+        res.status(200).json({ message: 'Scores sent successfully' });
+    });
 
 
     // Graceful shutdown
@@ -172,6 +162,27 @@ async function main() {
         console.info(`Started server on port ${port}`);
     });
 
+    async function sendEndScores(competition_id) {
+        const competition = await scores.getCompetition(competition_id);
+        if (!competition) {
+            console.error(`Competition with ID ${competition_id} not found`);
+            ack();
+            return;
+        }
+        const scoresList = await scores.getScoresForCompetition(competition_id);
+        if (!scoresList) {
+            console.error(`No scores found for competition with ID ${competition_id}`);
+            ack();
+            return;
+        }
+
+        sendEndScoresQueue.send({
+            body: {
+                competition_id: competition_id,
+                scores_list: scoresList
+            }
+        });
+    }
 
 }
 
