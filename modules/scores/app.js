@@ -71,12 +71,12 @@ async function main() {
     const scores = createScoresRepository(pool);
 
     const amqpconn = await createAmqpConnection(amqpConfig);
-    const sendEndScoresQueue = amqpconn.createProducer(queues.sendEndScoresQueue);
+    const sendEndScoresQueue = await amqpconn.createProducer(queues.sendEndScoresQueue);
 
     amqpconn.createConsumer(queues.receivedCompetitionCreatedQueue, async ({ content, ack }) => {
         const { competition_id, start_timestamp, end_timestamp } = await content;
         console.info(`Received competition created event: ${competition_id}`);
-        console.info(`Competition start time: ${start_timestamp}`);   
+        console.info(`Competition start time: ${start_timestamp}`);
         console.info(`Competition end time: ${end_timestamp}`);
 
         scores.createCompetition(competition_id, start_timestamp, end_timestamp);
@@ -103,7 +103,7 @@ async function main() {
 
 
     amqpconn.createConsumer(queues.receivedRegistrationEndedQueue, async ({ content, ack }) => {
-        const { competition_id } = content;
+        const { competition_id } = await content;
         console.info(`Received registration ended event for competition: ${competition_id}`);
 
         await sendEndScores(competition_id);
@@ -142,7 +142,7 @@ async function main() {
 
         res.json(scoresList);
     });
-    
+
     app.post('/api/scores/sendScores', async (req, res) => {
         const { competition_id } = req.body;
         console.info(`Received request to send scores for competition: ${competition_id}`);
@@ -174,11 +174,9 @@ async function main() {
             return;
         }
 
-        sendEndScoresQueue.send({
-            body: {
+        await sendEndScoresQueue.send({
                 competition_id: competition_id,
                 scores_list: scoresList
-            }
         });
     }
 
@@ -187,7 +185,7 @@ async function main() {
 main();
 
 function calculateMaxScore(endtime, starttime) {
-    return endtime - starttime; 
+    return endtime - starttime;
 }
 
 function calculateScore(endtime, startTime, submission_time, distance) {

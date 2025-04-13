@@ -128,7 +128,7 @@ async function main() {
     // Create a new competition
     app.post('/api/targets/', multipartParser, async (req, res) => {
         // Destructure after ensuring formData exists
-        const { file,  city, start_timestamp, end_timestamp } = req.formData;
+        const { file, city, start_timestamp, end_timestamp } = req.formData;
 
         const filename = file.info.filename
         const fileBuffer = file.buffer;
@@ -169,6 +169,9 @@ async function main() {
             start_timestamp: target.start_timestamp,
             end_timestamp: target.end_timestamp,
         };
+
+        console.log(scoresMessage);
+
         await competetionCreatedQueue.send(scoresMessage);
 
         res.json(target)
@@ -183,7 +186,7 @@ async function main() {
         const targetExists = await targetRepo.targetExists(competition_id);
 
         if (!targetExists){
-            return res.status(404).send("Given competition doesn't exist");
+            return res.status(400).send("Given competition doesn't exist");
         }
 
         if (await targetRepo.isFinished(competition_id)) {
@@ -223,9 +226,11 @@ async function main() {
 
         res.json(submission);
     });
-    
+
     // Delete your picture from the competetion
     app.delete('/api/targets/:competition_id/:email', async (req, res) => {
+
+        console.log("entered")
 
         const competition_id = req.params.competition_id;
         const email = req.params.email;

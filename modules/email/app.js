@@ -90,7 +90,7 @@ async function main() {
     amqpconn.createConsumer(queues.endscoreRequest, async ({ content, ack, nack }) => {
 
         try {
-            const scores = content.scores_list;
+            const scores = await content.scores_list;
 
             let html = `
                 <!DOCTYPE html>

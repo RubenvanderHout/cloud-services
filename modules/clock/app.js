@@ -1,7 +1,7 @@
 require("dotenv").config();
+const { Agenda }= require("@hokify/agenda");
 const AmqpModule = require("./amqp.js");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
-const { storeTimerToDB, connectToMongoDB, getRunningTimers } = require("./repository.js");
 
 const amqpConfig = {
     url: process.env.AMQP_HOST,
@@ -26,76 +26,49 @@ const REQUIRED_ENV_VARS = [
     "QUEUE_TIMER_ENDED_CLOCK_SCORE",
 ];
 
+
 async function main() {
     parseEnvVariables(REQUIRED_ENV_VARS);
 
     const timerReceivedHandler = async ({ content, ack }) => {
-        await storeTimer(content);
-        startTimer(content);
+        await startTimer(content);
         ack();
     };
 
-    const timerRepository = await connectToMongoDB();
+    const agenda = new Agenda({
+        db: { address: process.env.MONGO_URI },
+    });
+
     const amqpconn = await createAmqpConnection(amqpConfig);
     amqpconn.createConsumer(queues.receivedTimerStartedQueue, timerReceivedHandler);
     const sendTimerEndedQueue = await amqpconn.createProducer(queues.sendTimerEndedQueue);
     const sendRegistrationEndedQueue = await amqpconn.createProducer(queues.sendRegistrationEndedQueue);
     console.log("Clock service is running...");
 
-    await restartRunningTimers()
-    
-    function startTimer(content) {
-        const timerDuration = content.end_timestamp - content.start_timestamp;
+    agenda.define("timerJob", async (job) => {
+        const { competition_id } = job.attrs.data;
 
-        setTimers(content.competition_id, timerDuration);
-    }
+        console.log("Ran")
 
-    async function storeTimer(content) {
-        const { start_timestamp, end_timestamp, competition_id } = content;
-
-
-        const timer = {
-            competition_id: competition_id,
-            startTime: start_timestamp,
-            endTime: end_timestamp,
-        };
-
-        try {
-            await storeTimerToDB(timerRepository, timer);
-        } catch (err) {
-            console.error(err)
-        }
-    };
-
-    function setTimers(competition_id, timerDuration) {
-        setTimeout(async () => {
+        sendTimerEndedQueue.send({
+            competition_id: competition_id
+        });
+        sendRegistrationEndedQueue.send({
+            competition_id: competition_id
+        });
+    });
 
 
-            Promise.all([
-                sendTimerEndedQueue.send({
-                    competition_id: competition_id
-                }),
-                sendRegistrationEndedQueue.send({
-                    competition_id: competition_id
-                })
-            ]);
-        }
-            , timerDuration);
-    }
+    async function startTimer(content) {
+        const unixTimestamp = content.end_timestamp;
+        const targetDate = new Date(unixTimestamp * 1000);
 
-    async function restartRunningTimers() {
-        console.log("Restarting running timers...");
-        getRunningTimers(timerRepository)
-        .then((timers) => {
-            timers.forEach(timer => {
-                const timerDuration = timer.endTime - Date.now();
-                setTimers(timer.competition_id, timerDuration);
-            });
-        })
-        .catch(err => {
-            console.error("Error fetching running timers:", err);
+        await agenda.schedule(targetDate, "timerJob", {
+            competition_id: content.competition_id
         });
     }
+
+    await agenda.start();
 }
 
 function parseEnvVariables(requiredVars) {
@@ -109,4 +82,3 @@ function parseEnvVariables(requiredVars) {
 }
 
 main();
-

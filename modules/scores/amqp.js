@@ -136,8 +136,6 @@ async function createQueueProducer(createChannelFn, close, queueConfig) {
                     timestamp: new Date().toISOString()
                 }
             };
-        } finally {
-            channel.removeListener('return', handleReturn);
         }
     }
 

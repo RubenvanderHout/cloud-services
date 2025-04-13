@@ -75,7 +75,7 @@ async function addScore(pool, user_email, competition_id, score) {
 
 async function getScoresForCompetition(pool, competition_id) {
   const [rows] = await pool.execute(
-    `SELECT user_email, picture_id, score
+    `SELECT user_email, score
        FROM scores
        WHERE competition_id = ?
        ORDER BY score DESC`,
@@ -86,7 +86,7 @@ async function getScoresForCompetition(pool, competition_id) {
 
 async function getUserScores(pool, competition_id, user_email) {
   const [rows] = await pool.execute(
-    `SELECT competition_id, picture_id, score
+    `SELECT competition_id, score
        FROM scores
        WHERE user_email = ? AND competition_id = ?`,
     [user_email, competition_id]

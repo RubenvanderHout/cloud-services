@@ -183,7 +183,7 @@ async function createTargetRepo(dbName, mongoConnection) {
                 throw new Error('Missing target_id parameter');
             }
             return await targetCollection.updateOne(
-                { target_id },
+                { competition_id: target_id },
                 { $set: { is_finished: true } }
             );
         } catch (error) {
@@ -254,7 +254,7 @@ async function createSubmissionRepo(dbname, mongoConnection) {
                 throw new Error('Missing user_email parameter');
             }
 
-            await submissionCollection.deleteOne({ competition_id, user_email });
+            await submissionCollection.deleteOne({ competition_id: competition_id, user_email: user_email });
         } catch (error) {
             console.error(`Error marking competition ${competition_id} as finished:`, error);
             throw new Error('Failed to delete submission');
