@@ -83,8 +83,6 @@ async function main() {
         try {
             const pass = await bcrypt.hash(req.body.password, 10);
 
-            console.log({ username: req.params.username, email: req.body.email, password: pass })
-
             const user = { username: req.params.username, email: req.body.email, password: pass };
             await userRepository.saveUser(user);
             await sendEmailQueue.send({ username: user.username, email: user.email });

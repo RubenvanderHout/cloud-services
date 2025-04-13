@@ -39,6 +39,8 @@ export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS 
             if (!response.ok) {
                 const error = new Error(`HTTP ${response.status}`);
                 error.status = response.status;
+                error.statusText = response.statusText;
+                error.targetUrl = targetUrl;
                 throw error;
             }
 
@@ -50,7 +52,7 @@ export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS 
                 data: isJson ? await response.json() : await response.text(),
             };
         } catch (error) {
-            error.serviceUrl = serviceBaseUrl;
+            console.log(error);
             throw error;
         }
     }
@@ -67,7 +69,7 @@ export function createServiceMiddleware(serviceBaseUrl, CIRCUIT_BREAKER_OPTIONS 
     breaker.on('close', () => console.log(`Circuit CLOSED for ${serviceBaseUrl}`));
     breaker.on('halfOpen', () => console.log(`Circuit HALF-OPEN for ${serviceBaseUrl}`));
     breaker.on('failure', (error) =>
-        console.log(`Failure for ${serviceBaseUrl}:`, error.message)
+        console.log(`Failure for ${error.targetUrl}: statuscode: ${error.status}, message: ${error.statusText} `)
     );
 
     breaker.fallback(() => ({
