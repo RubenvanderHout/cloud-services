@@ -103,26 +103,41 @@ async function main() {
                     <ul>
             `;
 
-            scores.forEach((score) => {
-                html += `<li>${score.user_email}: ${score.score}</li>`;
-            });
+            if (scores?.length < 1) {
+                html += `<p>No participated</p>`
 
-            html += `
+                await transporter.sendMail({
+                    from: '"Photo prestiges" <photos@example.com>',
+                    to: "photos@example.com",
+                    subject: "Competition ended!",
+                    html: html,
+                });
+
+            } else {
+                scores.forEach((score) => {
+                    html += `<li>${score.user_email}: ${score.score}</li>`;
+                });
+
+                html += `
                     </ul>
                     <p>Thank you for participating!</p>
                 </body>
                 </html>
-            `;
+                `;
 
-            scores.forEach(async (score) => {
-                const info = await transporter.sendMail({
-                    from: '"Photo prestiges" <photos@example.com>',
-                    to: score.user_email,
-                    subject: "Competition ended!",
-                    html: html,
+                scores.forEach(async (score) => {
+                    const info = await transporter.sendMail({
+                        from: '"Photo prestiges" <photos@example.com>',
+                        to: score.user_email,
+                        subject: "Competition ended!",
+                        html: html,
+                    });
+                    console.log('Email sent:', info.messageId);
                 });
-                console.log('Email sent:', info.messageId);
-            });
+            }
+
+
+
             ack();
         } catch (error) {
             nack();

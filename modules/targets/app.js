@@ -170,8 +170,6 @@ async function main() {
             end_timestamp: target.end_timestamp,
         };
 
-        console.log(scoresMessage);
-
         await competetionCreatedQueue.send(scoresMessage);
 
         res.json(target)
@@ -268,11 +266,6 @@ async function main() {
         await amqpconn.closeAll();
         await mongoConnection.closeAll();
         process.exit(0);
-    });
-
-    app.use((err, _req, res, _next) => {
-        console.log(err);
-        res.status(500).json({ error: 'Internal server error' });
     });
 
     app.listen(port, host, () => {

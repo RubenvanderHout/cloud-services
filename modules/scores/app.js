@@ -171,7 +171,6 @@ async function main() {
         const scoresList = await scores.getScoresForCompetition(competition_id);
         if (!scoresList) {
             console.error(`No scores found for competition with ID ${competition_id}`);
-            return;
         }
 
         await sendEndScoresQueue.send({
