@@ -1,7 +1,7 @@
 require("dotenv").config();
 const AmqpModule = require("./amqp.js");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
-const { storeTimerToDB, connectToMongoDB } = require("./repository.js");
+const { storeTimerToDB, connectToMongoDB, getRunningTimers } = require("./repository.js");
 
 const amqpConfig = {
     url: process.env.AMQP_HOST,
@@ -42,27 +42,13 @@ async function main() {
     const sendRegistrationEndedQueue = await amqpconn.createProducer(queues.sendRegistrationEndedQueue);
     console.log("Clock service is running...");
 
-
+    await restartRunningTimers()
+    
     function startTimer(content) {
         const timerDuration = content.end_timestamp - content.start_timestamp;
 
-        setTimeout(async () => {
-            const { competition_id } = content;
-
-
-            Promise.all([
-                sendTimerEndedQueue.send({
-                    competition_id: competition_id
-                }),
-                sendRegistrationEndedQueue.send({
-                    competition_id: competition_id
-                })
-            ]);
-        }
-            , timerDuration);
+        setTimers(content.competition_id, timerDuration);
     }
-
-
 
     async function storeTimer(content) {
         const { start_timestamp, end_timestamp, competition_id } = content;
@@ -80,6 +66,35 @@ async function main() {
             console.error(err)
         }
     };
+
+    function setTimers(competition_id, timerDuration) {
+        setTimeout(async () => {
+
+
+            Promise.all([
+                sendTimerEndedQueue.send({
+                    competition_id: competition_id
+                }),
+                sendRegistrationEndedQueue.send({
+                    competition_id: competition_id
+                })
+            ]);
+        }
+            , timerDuration);
+    }
+
+    async function restartRunningTimers() {
+        getRunningTimers(timerRepository)
+        .then((timers) => {
+            timers.forEach(timer => {
+                const timerDuration = timer.endTime - Date.now();
+                setTimers(timer.competition_id, timerDuration);
+            });
+        })
+        .catch(err => {
+            console.error("Error fetching running timers:", err);
+        });
+    }
 }
 
 function parseEnvVariables(requiredVars) {
