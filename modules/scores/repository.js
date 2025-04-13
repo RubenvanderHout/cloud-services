@@ -41,7 +41,7 @@ function createScoresRepository(pool) {
     getCompetition: (competition_id) => getCompetition(pool, competition_id),
     addScore: (user_email, competition_id, pictureId, score) => addScore(pool, user_email, competition_id, pictureId, score),
     getScoresForCompetition: (competition_id) => getScoresForCompetition(pool, competition_id),
-    getUserScores: (user_email) => getUserScores(pool, user_email),
+    getUserScores: (competition_id, user_email ) => getUserScores(pool, competition_id, user_email ),
     deleteScore: (competition_id, user_email) => deleteScore(pool, competition_id, user_email),
   };
 }
