@@ -113,7 +113,7 @@ async function main() {
         sendEndScoresQueue.send({
             body: {
                 competition_id: competition_id,
-                scoresList: scoresList
+                scores_list: scoresList
             }
         });
 

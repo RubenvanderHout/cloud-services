@@ -67,6 +67,49 @@ async function main() {
         }
     });
 
+    amqpconn.createConsumer(queues.endscoreRequest, async ({ content, ack, nack }) => {
+
+        try {
+            const scores = content.scores_list;
+
+            let html = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>End Scores</title>
+                </head>
+                <body>
+                    <h2>The competition has concluded, here are the results!</h2>
+                    <ul>
+            `;
+
+            scores.forEach((score) => {
+                html += `<li>${score.user_email}: ${score.score}</li>`;
+            });
+
+            html += `
+                    </ul>
+                    <p>Thank you for participating!</p>
+                </body>
+                </html>
+            `;
+
+            scores.forEach(async (score) => {
+                const info = await transporter.sendMail({
+                    from: '"Photo prestiges" <photos@example.com>',
+                    to: score.user_email,
+                    subject: "Competition ended!",
+                    html: html,
+                });
+                console.log('Email sent:', info.messageId);
+            });
+            ack();
+        } catch (error) {
+            nack();
+            console.error('Error sending email:', error);
+        }
+    });
+
     // Graceful shutdown
     process.on('SIGINT', async () => {
         await amqpconn.closeAll();
