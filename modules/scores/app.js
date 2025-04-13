@@ -166,13 +166,11 @@ async function main() {
         const competition = await scores.getCompetition(competition_id);
         if (!competition) {
             console.error(`Competition with ID ${competition_id} not found`);
-            ack();
             return;
         }
         const scoresList = await scores.getScoresForCompetition(competition_id);
         if (!scoresList) {
             console.error(`No scores found for competition with ID ${competition_id}`);
-            ack();
             return;
         }
 
