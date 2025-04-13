@@ -70,13 +70,13 @@ async function main(){
 
 
     async function storeTimer(content){
-        const { startTimeStamp, endTimeStamp, competition_id } = content.body;
+        const { start_timestamp, end_timestamp, competition_id } = content.body;
 
 
         const timer = {
             competition_id: competition_id,
-            startTime: startTimeStamp,
-            endTime: endTimeStamp,
+            startTime: start_timestamp,
+            endTime: end_timestamp,
         };
 
         try {
