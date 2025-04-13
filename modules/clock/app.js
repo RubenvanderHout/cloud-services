@@ -44,7 +44,7 @@ async function main(){
 
 
     function startTimer(content) {
-        const timerDuration = content.body.endTimeStamp - content.body.startTimeStamp;
+        const timerDuration = content.body.end_timestamp - content.body.start_timestamp;
 
         setTimeout(async () => {
             const { competition_id } = content.body;
