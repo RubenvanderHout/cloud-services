@@ -1,14 +1,16 @@
 require("dotenv").config();
 const express = require("express");
 const { v4: uuidv4 } = require('uuid');
-const multer = require("multer");
+const multipartParser = require("./filerparser")
 const AmqpModule = require("./amqp");
+const crypto = require("node:crypto");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 
 const blobStorageModule = require("./blobstorage");
 const createBlobService = blobStorageModule.createBlobService;
 
 const repository = require("./repository");
+
 const createMongoConnection = repository.createMongoConnection;
 const createSubmissionRepo = repository.createSubmissionRepo;
 const createTargetRepo = repository.createTargetRepo;
@@ -85,10 +87,8 @@ const queues = {
 };
 
 const containerClientConfig = {
-    publicAccess: 'blob'
+    access: 'blob',
 }
-
-const upload = multer();
 
 async function main() {
     parseEnvVariables(REQUIRED_ENV_VARS);
@@ -99,10 +99,8 @@ async function main() {
     const blobStorageClient = createBlobService(blobstorageConfig);
 
     const mongoConnection = await createMongoConnection(mongoDbConfig);
-    const database = await mongoConnection.getDatabase(mongoDbConfig.db);
-
-    const submissionRepo = await createSubmissionRepo(database, mongoConnection);
-    const targetRepo = await createTargetRepo(database, mongoConnection);
+    const submissionRepo = await createSubmissionRepo(mongoDbConfig.db, mongoConnection);
+    const targetRepo = await createTargetRepo(mongoDbConfig.db, mongoConnection);
 
     const amqpconn = await createAmqpConnection(amqpConfig);
     const startCompetitionQueue = await amqpconn.createProducer(queues.competitionStarted);
@@ -115,28 +113,45 @@ async function main() {
         ack();
     })
 
-    // Create a new competition
-    app.post('/api/targets/', upload.single('file'), async (req, res) => {
+    app.use((req, _res, next) => {
+        const userHeader = req.headers['x-user'];
 
-        const filename= req.body.filename
-        const fileBuffer = req.file.buffer;
+        try {
+            req.user = JSON.parse(userHeader);
+        } catch (err) {
+            console.warn('Invalid x-user header:', err);
+        }
+
+        next();
+    });
+
+    // Create a new competition
+    app.post('/api/targets/', multipartParser, async (req, res) => {
+        // Destructure after ensuring formData exists
+        const { file,  city, start_timestamp, end_timestamp } = req.formData;
+
+        const filename = file.info.filename
+        const fileBuffer = file.buffer;
         const filehash = crypto
             .createHash('sha256')
             .update(fileBuffer)
             .digest('hex');
 
-        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id, containerClientConfig)
-        const targetPictureUrl =client.uploadBlob(filename, fileBuffer);
+        const competition_id = uuidv4();
+
+
+        const client = await blobStorageModule.createContainerClient(blobStorageClient, competition_id, containerClientConfig)
+        const targetPictureUrl = await client.uploadBlob(filename, fileBuffer);
 
         const target = {
-            competition_id: uuidv4(),
-            city: req.body.city,
-            user_email: req.user.email,
-            picture_id: filename,
-            picture_url: targetPictureUrl,
-            picture_hash: filehash,
-            start_timestamp: req.body.start_timestamp,
-            end_timestamp: req.body.end_timestamp,
+            competition_id: String(competition_id),
+            city: String(city),
+            user_email: String(req.user.email),
+            picture_id: String(file.info.filename),
+            picture_url: String(targetPictureUrl),
+            picture_hash: String(filehash),
+            start_timestamp: Number(start_timestamp),
+            end_timestamp: Number(end_timestamp),
             is_finished: false
         }
         await targetRepo.createTarget(target);
@@ -155,27 +170,23 @@ async function main() {
         };
         await competetionCreatedQueue.send(scoresMessage);
 
-        res.json(target).send("Competition created");
+        res.json(target)
     });
 
     // Add a picture to a competion
-    app.post('/api/targets/:competition_id', upload.single('file'), async (req, res) => {
+    app.post('/api/targets/:competition_id', multipartParser, async (req, res) => {
 
-        if(await targetRepo.isFinished()) {
-            res.status(410).send("Competition is done no more picture allowed");
-        }
+        const { file, filename, competition_id } = req.formData;
 
-        const competition_id = req.params.competition_id;
         if (!targetExists){
-            res.status(404).send("Given competition doesn't exist");
+            return res.status(404).send("Given competition doesn't exist");
         }
 
-        if (await targetRepo.isFinished()) {
-            res.status(410).send("Competition is done no more picture allowed");
+        if (await targetRepo.isFinished(competition_id)) {
+            return res.status(410).send("Competition is done no more picture allowed");
         }
 
-        const filename = req.body.filename
-        const fileBuffer = req.file.buffer;
+        const fileBuffer = file.buffer;
         const filehash = crypto
             .createHash('sha256')
             .update(fileBuffer)
@@ -187,10 +198,10 @@ async function main() {
             res.status(422).send("You are uploading the same exact file. This is not allowed")
         };
 
-        const client = blobStorageModule.createContainerClient(blobStorageClient, competition_id, containerClientConfig)
-        const submission_image_url = client.uploadBlob(filename, fileBuffer);
+        const client = await blobStorageModule.createContainerClient(blobStorageClient, competition_id, containerClientConfig)
+        const submission_image_url = await client.uploadBlob(filename, fileBuffer);
 
-        const target_image_url = targetRepo.getTargetPictureUrl(competition_id);
+        const target_image_url = await targetRepo.getTargetPictureUrl(competition_id);
 
         const unixTimestamp = Math.floor(Date.now() / 1000);
 
@@ -216,16 +227,16 @@ async function main() {
         const email = req.params.email;
 
         if(email !== req.user.email){
-            res.status(403).send("Forbidden");
+            return res.status(403).send("Forbidden");
         }
         try {
             await submissionRepo.deleteSubmission(competition_id, email);
             photoDeletedQueue.send({ competition_id: competition_id, user_email: email })
         } catch {
-            res.status(500);
+            return res.status(500);
         }
 
-        res.status(200);
+        return res.status(200);
     });
 
     // Get all targets for a city

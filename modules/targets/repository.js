@@ -30,7 +30,6 @@ async function createMongoConnection(config) {
             });
 
             console.log('Successfully connected to MongoDB');
-            return client;
         } catch (error) {
             console.error('Failed to connect to MongoDB:', error);
             scheduleReconnect();
@@ -84,11 +83,16 @@ async function createMongoConnection(config) {
 
 
 // TARGET REPO
-async function createTargetRepo(database, mongoConnection) {
+async function createTargetRepo(dbName, mongoConnection) {
     let targetCollection;
 
     async function constructor() {
-        targetCollection = await mongoConnection.getCollection(database, "targets");
+        try {
+            targetCollection = await mongoConnection.getCollection(dbName, "targets");
+        } catch(err) {
+            console.log(err)
+            throw err;
+        }
     }
 
     async function createTarget(target) {
@@ -96,9 +100,9 @@ async function createTargetRepo(database, mongoConnection) {
             if (!target || typeof target !== 'object') {
                 throw new Error('Invalid target object');
             }
-            const result = await targetCollection.insertOne(target);
-            return result;
+            await targetCollection.insertOne(target);
         } catch (error) {
+            console.error('Error creating target:', error);
             throw new Error('Failed to create target');
         }
     }
@@ -204,11 +208,16 @@ async function createTargetRepo(database, mongoConnection) {
 }
 
 // SUBMISSION REPO
-async function createSubmissionRepo(database, mongoConnection) {
+async function createSubmissionRepo(dbname, mongoConnection) {
     let submissionCollection;
 
     async function constructor() {
-        submissionCollection = await mongoConnection.getCollection(database, "submissions");
+        try {
+            submissionCollection = await mongoConnection.getCollection(dbname, "submissions");
+        } catch (err) {
+            console.log(err)
+            throw err;
+        }
     }
 
     async function createSubmission(submission) {
