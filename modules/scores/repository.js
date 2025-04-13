@@ -46,8 +46,8 @@ function createScoresRepository(pool) {
     };
 }
 
-async function createCompetition(competition_id, starttime, endtime) {
-    const [result] = await this.pool.execute(
+async function createCompetition(pool, competition_id, starttime, endtime) {
+    const [result] = await pool.execute(
       `INSERT INTO competitions (competition_id, starttime, endtime)
        VALUES (?, ?, ?)`,
       [competition_id, starttime, endtime]
@@ -55,16 +55,16 @@ async function createCompetition(competition_id, starttime, endtime) {
     return result.insertId;
   }
 
-  async function getCompetition(competition_id) {
-    const [rows] = await this.pool.execute(
+  async function getCompetition(pool, competition_id) {
+    const [rows] = await pool.execute(
       `SELECT * FROM competitions WHERE competition_id = ?`,
       [competition_id]
     );
     return rows[0];
   }
 
-  async function addScore(user_email, competition_id, pictureId, score) {
-    await this.pool.execute(
+  async function addScore(pool, user_email, competition_id, pictureId, score) {
+    await pool.execute(
       `INSERT INTO scores (user_email, competition_id, picture_id, score)
        VALUES (?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE score = VALUES(score)`,
@@ -72,8 +72,8 @@ async function createCompetition(competition_id, starttime, endtime) {
     );
   }
 
-  async function getScoresForCompetition(competition_id) {
-    const [rows] = await this.pool.execute(
+  async function getScoresForCompetition(pool, competition_id) {
+    const [rows] = await pool.execute(
       `SELECT user_email, picture_id, score
        FROM scores
        WHERE competition_id = ?
@@ -83,8 +83,8 @@ async function createCompetition(competition_id, starttime, endtime) {
     return rows;
   }
 
-  async function getUserScores(competition_id,user_email) {
-    const [rows] = await this.pool.execute(
+  async function getUserScores(pool, competition_id,user_email) {
+    const [rows] = await pool.execute(
       `SELECT competition_id, picture_id, score
        FROM scores
        WHERE user_email = ? AND competition_id = ?`,
@@ -93,8 +93,8 @@ async function createCompetition(competition_id, starttime, endtime) {
     return rows;
   }
 
-  async function deleteScore(competition_id, user_email) {
-    await this.pool.execute(
+  async function deleteScore(pool, competition_id, user_email) {
+    await pool.execute(
       `DELETE FROM scores
        WHERE competition_id = ? AND user_email = ?`,
       [competition_id, user_email]

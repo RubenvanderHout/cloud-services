@@ -80,7 +80,7 @@ async function main() {
 
     amqpconn.createConsumer(queues.receivedSubmissionQueue, async ({ content, ack }) => {
         const { competition_id, submission_time, distance, user_email } = content;
-        const competition = await scores.getCompetition(competition_id);
+        const competition = await scores.getCompetition(pool, competition_id);
 
         if (!competition) {
             console.error(`Competition with ID ${competition_id} not found`);
@@ -97,13 +97,13 @@ async function main() {
 
     amqpconn.createConsumer(queues.receivedRegistrationEndedQueue, async ({ content, ack }) => {
         const { competition_id } = content;
-        const competition = await scores.getCompetition(competition_id);
+        const competition = await scores.getCompetition(pool, competition_id);
         if (!competition) {
             console.error(`Competition with ID ${competition_id} not found`);
             ack();
             return;
         }
-        const scoresList = await scores.getScoresForCompetition(competition_id);
+        const scoresList = await scores.getScoresForCompetition(pool, competition_id);
         if (!scoresList) {
             console.error(`No scores found for competition with ID ${competition_id}`);
             ack();
@@ -122,7 +122,7 @@ async function main() {
 
     amqpconn.createConsumer(queues.receivedSubmissionDeletedQueue, async ({ content, ack }) => {
         const { competition_id, user_email } = content;
-        await scores.deleteScore(competition_id, user_email);
+        await scores.deleteScore(pool, competition_id, user_email);
         ack();
     });
 
@@ -131,7 +131,7 @@ async function main() {
 
     app.get('/api/scores/:competition_id', async (req, res) => {
         const competition_id = req.params.competition_id;
-        const scoresList = await scores.getScoresForCompetition(competition_id);
+        const scoresList = await scores.getScoresForCompetition(pool, competition_id);
 
         if (!scoresList) {
             return res.status(404).json({ message: 'Competition not found' });
@@ -143,7 +143,7 @@ async function main() {
     app.get('/api/scores/:competition_id/:user_email', async (req, res) => {
         const competition_id = req.params.competition_id;
         const user_email = req.params.user_email;
-        const scoresList = await scores.getUserScores(competition_id, user_email);
+        const scoresList = await scores.getUserScores(pool, competition_id, user_email);
 
         if (!scoresList) {
             return res.status(404).json({ message: 'Competition not found' });
