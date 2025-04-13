@@ -1,4 +1,4 @@
-require("dotenv").config();app.del
+require("dotenv").config();
 const AmqpModule = require("./amqp.js");
 const createAmqpConnection = AmqpModule.createAmqpConnection;
 const { storeTimerToDB, connectToMongoDB } = require("./repository.js");
