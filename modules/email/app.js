@@ -38,7 +38,7 @@ async function main() {
     amqpconn.createConsumer(queues.confirmationRequest, async ({ content, ack, nack }) => {
 
         try {
-            const user = content;
+            const user = content.user;
 
             const html = `
                 <!DOCTYPE html>
