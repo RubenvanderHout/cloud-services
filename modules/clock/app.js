@@ -52,14 +52,10 @@ async function main(){
             if (timer) {
                 Promise.all([
                     sendTimerEndedQueue.send({
-                        body: {
-                            competition_id: competition_id
-                        }
+                        competition_id: competition_id
                     }),
                     sendRegistrationEndedQueue.send({
-                        body: {
-                            competition_id: competition_id
-                        }
+                        competition_id: competition_id
                     })
                 ]);
             }
