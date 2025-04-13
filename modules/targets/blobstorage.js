@@ -10,7 +10,7 @@ function createBlobService(config) {
             console.log("Succesfully connected to BlobService")
             return blobServiceClient;
         } catch (err) {
-            console.log(`Error: ${err.message}`);
+            console.log(`Error azure connection: ${err.message}`);
         }
     }
 
@@ -18,16 +18,16 @@ function createBlobService(config) {
 }
 
 
-async function createContainerClient(blobServiceClient, containerName, config) {
+async function createContainerClient(blobServiceClient, containerName, config={}) {
 
     let containerClient;
 
     async function initialize() {
         try {
-            containerClient = blobServiceClient.getContainerClient(containerName);
-             await containerClient.create(config);
+            containerClient = await blobServiceClient.getContainerClient(containerName);
+            await containerClient.create(config);
         } catch (err) {
-            console.log(`Error: ${err.message}`);
+            console.log(`Blobstoragecontainer error: ${err.message}`);
         }
     }
 
@@ -35,14 +35,15 @@ async function createContainerClient(blobServiceClient, containerName, config) {
 
         try {
             const blockBlobClient = containerClient.getBlockBlobClient(filename);
-            const uploadBlobResponse = await blockBlobClient.upload(data);
+            await blockBlobClient.uploadData(data);
+            const url = blockBlobClient.url;
             console.log(
-                `Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}`
+                `Blob was uploaded successfully. url: ${url}`
             );
-            return blockBlobClient.url;;
+            return url;
 
         } catch (err) {
-            console.log(`Error: ${err.message}`);
+            console.log(`UploadError: ${err.message}`);
         }
     }
 
@@ -54,7 +55,7 @@ async function createContainerClient(blobServiceClient, containerName, config) {
             return await streamToText(downloadBlockBlobResponse.readableStreamBody);
 
         } catch (err) {
-            console.log(`Error: ${err.message}`);
+            console.log(`Download: ${err.message}`);
         }
     }
 
@@ -68,7 +69,7 @@ async function createContainerClient(blobServiceClient, containerName, config) {
             return fileNames;
 
         } catch (err) {
-            console.log(`Error: ${err.message}`);
+            console.log(`ListError: ${err.message}`);
         }
     }
 

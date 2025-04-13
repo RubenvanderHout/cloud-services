@@ -13,11 +13,11 @@
     "@azure/identity": "^4.8.0",
     "@azure/storage-blob": "^12.27.0",
     "amqplib": "^0.10.7",
+    "busboy": "^1.6.0",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.15.0",
-    "multer": "^1.4.5-lts.2",
     "uuid": "^11.1.0"
   }
 }
